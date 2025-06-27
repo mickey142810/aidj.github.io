@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Mood DJ 🎶</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #1e88e5;
+      margin-bottom: 10px;
+    }
+
+    p.description {
+      color: #555;
+      font-size: 1rem;
+    }
+
+    video, canvas {
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      margin: 10px 0;
+      width: 100%;
+      height: auto;
+    }
+
+    button {
+      background: #1e88e5;
+      color: #fff;
+      padding: 12px 25px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #1565c0;
+    }
+
+    #moodResult {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    #loading {
+      margin-top: 8px;
+      font-style: italic;
+      color: #888;
+      display: none;
+    }
+
+    a {
+      color: #43a047;
+      font-size: 1.1em;
+      display: inline-block;
+      margin-top: 12px;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .logo {
+      width: 70px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://cdn-icons-png.flaticon.com/512/727/727245.png" alt="DJ Icon" class="logo">
+    <h1>AI Mood DJ</h1>
+    <p class="description">Take a selfie and let the AI pick music to match your vibe 🎵</p>
+
+    <!-- ✅ MOBILE-FRIENDLY VIDEO -->
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
+
+    <button onclick="takePhoto()">📸 Take Photo</button>
+    <p id="loading">Analyzing mood...</p>
+    <p id="moodResult">Your mood will appear here...</p>
+    <div id="linkContainer"></div>
+  </div>
+
+  <script>
+    const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
+    const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const result = document.getElementById("moodResult");
+    const linkContainer = document.getElementById("linkContainer");
+    const loading = document.getElementById("loading");
+
+    const emotionLinks = {
+      happiness: "https://youtube.com/playlist?list=PLplXQ2cg9B_qrNvF8KaDew3EetUqO8jBo",
+      sadness: "https://youtube.com/playlist?list=PLRyNF0_q1iaTt962dFWOcOl5KeOZ14Cms",
+      anger: "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q",
+      neutral: "https://www.youtube.com/watch?v=XXYlFuWEuKI&list=RDQMgEzdN5RuCXE&start_radio=1",
+      surprise: "https://youtube.com/playlist?list=PLplXQ2cg9B_qrNvF8KaDew3EetUqO8jBo",
+      fear: "https://youtube.com/playlist?list=PLRyNF0_q1iaTt962dFWOcOl5KeOZ14Cms",
+      disgust: "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q"
+    };
+
+    // ✅ Start video stream (mobile safe)
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert("Please allow camera access. If you're in an app browser (e.g. Facebook), try using Chrome or Safari.");
+        console.error("Camera access error:", err);
+      });
+
+    function takePhoto() {
+      loading.style.display = "block";
+      result.textContent = "";
+      linkContainer.innerHTML = "";
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result.split(',')[1];
+          detectEmotion(base64);
+        };
+        reader.readAsDataURL(blob);
+      }, "image/jpeg");
+    }
+
+    function detectEmotion(base64) {
+      const data = new URLSearchParams();
+      data.append("api_key", apiKey);
+      data.append("api_secret", apiSecret);
+      data.append("image_base64", base64);
+      data.append("return_attributes", "emotion");
+
+      fetch("https://api-us.faceplusplus.com/facepp/v3/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: data.toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        loading.style.display = "none";
+        const emotions = data?.faces?.[0]?.attributes?.emotion;
+        if (!emotions) {
+          result.textContent = "No face detected. Try again!";
+          return;
+        }
+
+        const topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
+        result.textContent = "Detected Mood: " + topMood;
+        const url = emotionLinks[topMood] || emotionLinks.neutral;
+        linkContainer.innerHTML = `<a href="${url}" target="_blank">🎶 Open ${topMood} Playlist</a>`;
+      })
+      .catch(err => {
+        loading.style.display = "none";
+        result.textContent = "Error analyzing mood.";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
