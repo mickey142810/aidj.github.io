@@ -94,6 +94,8 @@
       <textarea id="sadnessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
       <label>🎵 เพลงสำหรับอารมณ์โกรธ:</label>
       <textarea id="angerLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+      <label>🎵 เพลงสำหรับอารมณ์ปกติ (กลางๆ):</label>
+      <textarea id="neutralLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
     </div>
 
     <video id="video" autoplay muted playsinline></video>
@@ -177,6 +179,7 @@
         if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
         if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
         if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
+        if (topMood === "neutral")  url = getRandomLink("neutralLinks")  || "https://www.youtube.com/watch?v=5qap5aO4i9A";
 
         document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
       })
@@ -188,7 +191,7 @@
     }
 
     // Save and load from localStorage
-    const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks'];
+    const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks', 'neutralLinks'];
     textareas.forEach(id => {
       const el = document.getElementById(id);
       el.value = localStorage.getItem(id) || '';
