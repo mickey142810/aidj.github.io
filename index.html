@@ -1,5 +1,8 @@
-<!DOCTYPE html>
-<html lang="th">
+# Re-run the code to generate the final HTML file after state reset
+html_path = "/mnt/data/ai_mood_dj_full_final_with_defaults.html"
+
+html_final = """<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -36,10 +39,13 @@
       border-radius: 10px;
       padding: 10px;
       text-align: left;
+      z-index: 10;
     }
-    .settings-panel input {
+    .settings-panel textarea {
       width: 100%;
+      height: 60px;
       margin-bottom: 10px;
+      resize: vertical;
     }
     video {
       width: 100%;
@@ -62,33 +68,49 @@
       font-weight: bold;
       text-decoration: none;
     }
+    .tutorial {
+      text-align: left;
+      background: #e3f2fd;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>AI Mood DJ 🎧</h1>
-    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" width="24" class="settings" onclick="toggleSettings()" title="ตั้งค่า">
+    <div class="tutorial">
+      <h3>📋 How to Use:</h3>
+      <ol>
+        <li>🛠️ Click the gear icon → Paste your YouTube links for each mood (one per line)</li>
+        <li>📷 Show an emotion on your face in front of the camera</li>
+        <li>🤖 AI will detect your mood and play a matching random song</li>
+      </ol>
+    </div>
 
+    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" width="24" class="settings" onclick="toggleSettings()" title="Settings">
     <div class="settings-panel" id="settingsPanel">
-      <label>เพลงสำหรับอารมณ์สุข (ลิงก์ YouTube):</label>
-      <input type="url" id="happinessLink" placeholder="https://...">
-      <label>เพลงสำหรับอารมณ์เศร้า (ลิงก์ YouTube):</label>
-      <input type="url" id="sadnessLink" placeholder="https://...">
-      <label>เพลงสำหรับอารมณ์โกรธ (ลิงก์ YouTube):</label>
-      <input type="url" id="angerLink" placeholder="https://...">
+      <label>🎵 Happy Mood Songs:</label>
+      <textarea id="happinessLinks" placeholder="One YouTube link per line..."></textarea>
+      <label>🎵 Sad Mood Songs:</label>
+      <textarea id="sadnessLinks" placeholder="One YouTube link per line..."></textarea>
+      <label>🎵 Angry Mood Songs:</label>
+      <textarea id="angerLinks" placeholder="One YouTube link per line..."></textarea>
     </div>
 
     <video id="video" autoplay muted playsinline></video>
     <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
-    <button onclick="takePhoto()">📸 ถ่ายภาพ</button>
-    <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
-    <p id="moodResult">จะแสดงผลอารมณ์ที่ตรวจพบที่นี่</p>
+    <button onclick="takePhoto()">📸 Take Photo</button>
+    <p id="loading" style="display:none;">Analyzing mood...</p>
+    <p id="moodResult">Your mood will appear here...</p>
     <div id="linkContainer"></div>
   </div>
 
   <script>
     const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
     const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
+
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -96,13 +118,20 @@
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       .then(stream => { video.srcObject = stream; })
       .catch(err => {
-        alert("กรุณาอนุญาตให้เข้าถึงกล้อง และเปิดด้วย Chrome หรือ Safari");
+        alert("Please allow camera access and use Chrome or Safari.");
         console.error("Camera error:", err);
       });
 
     function toggleSettings() {
       const panel = document.getElementById("settingsPanel");
       panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
+
+    function getRandomLink(textareaId) {
+      const raw = document.getElementById(textareaId).value.trim();
+      if (!raw) return null;
+      const links = raw.split("\\n").map(s => s.trim()).filter(s => s);
+      return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
     }
 
     function takePhoto() {
@@ -137,29 +166,36 @@
         document.getElementById("loading").style.display = "none";
         const emotions = data?.faces?.[0]?.attributes?.emotion;
         if (!emotions) {
-          document.getElementById("moodResult").textContent = "ไม่พบใบหน้า ลองใหม่อีกครั้ง!";
+          document.getElementById("moodResult").textContent = "No face detected.";
           return;
         }
 
         let topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
-        if (topMood === "disgust") topMood = "sadness";
+        if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
         if (topMood === "surprise") topMood = "happiness";
 
-        document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
+        document.getElementById("moodResult").textContent = "Detected Mood: " + topMood;
 
-        let url = "https://www.youtube.com/watch?v=XXYlFuWEuKI";
-        if (topMood === "happiness") url = document.getElementById("happinessLink").value || url;
-        if (topMood === "sadness") url = document.getElementById("sadnessLink").value || url;
-        if (topMood === "anger") url = document.getElementById("angerLink").value || url;
+        let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // default happy
+        if (topMood === "happiness") url = getRandomLink("happinessLinks") || "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp";
+        if (topMood === "sadness") url = getRandomLink("sadnessLinks") || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
+        if (topMood === "anger") url = getRandomLink("angerLinks") || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
 
-        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎵 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
+        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 Play a ${topMood} mix</a>`;
       })
       .catch(err => {
         document.getElementById("loading").style.display = "none";
-        document.getElementById("moodResult").textContent = "เกิดข้อผิดพลาดในการวิเคราะห์";
+        document.getElementById("moodResult").textContent = "Error analyzing mood.";
         console.error(err);
       });
     }
   </script>
 </body>
 </html>
+"""
+
+# Save to file
+with open(html_path, "w") as f:
+    f.write(html_final.strip())
+
+html_path
