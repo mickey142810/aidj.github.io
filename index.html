@@ -10,6 +10,8 @@
       background: linear-gradient(to right, #e0f7fa, #ffffff);
       padding: 20px;
       text-align: center;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
     }
     .container {
       max-width: 400px;
@@ -19,12 +21,23 @@
       border-radius: 20px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       position: relative;
+      transition: background 0.3s, box-shadow 0.3s;
     }
     .settings {
       position: absolute;
       top: 10px;
+      right: 40px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+    }
+    .darkmode-toggle {
+      position: absolute;
+      top: 10px;
       right: 10px;
       cursor: pointer;
+      font-size: 20px;
+      user-select: none;
     }
     .settings-panel {
       display: none;
@@ -37,12 +50,18 @@
       padding: 10px;
       text-align: left;
       z-index: 10;
+      transition: background 0.3s, color 0.3s;
     }
     .settings-panel textarea {
       width: 100%;
       height: 60px;
       margin-bottom: 10px;
       resize: vertical;
+      background: white;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      transition: background 0.3s, color 0.3s;
     }
     video {
       width: 100%;
@@ -57,6 +76,10 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #1565c0;
     }
     a {
       display: block;
@@ -64,6 +87,7 @@
       color: green;
       font-weight: bold;
       text-decoration: none;
+      transition: color 0.3s;
     }
     .tutorial {
       text-align: left;
@@ -71,6 +95,42 @@
       padding: 15px;
       margin-bottom: 15px;
       border-radius: 10px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Dark Mode Styles */
+    body.dark {
+      background: #121212;
+      color: #ddd;
+    }
+    body.dark .container {
+      background: #1e1e1e;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    }
+    body.dark .settings-panel {
+      background: #2c2c2c;
+      border-color: #555;
+      color: #ddd;
+    }
+    body.dark .settings-panel textarea {
+      background: #333;
+      color: #ddd;
+      border-color: #555;
+    }
+    body.dark button {
+      background-color: #42a5f5;
+      color: #121212;
+    }
+    body.dark button:hover {
+      background-color: #1e88e5;
+      color: white;
+    }
+    body.dark a {
+      color: #80cbc4;
+    }
+    body.dark .tutorial {
+      background: #263238;
+      color: #ddd;
     }
   </style>
 </head>
@@ -86,7 +146,9 @@
       </ol>
     </div>
 
-    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" width="24" class="settings" onclick="toggleSettings()" title="Settings">
+    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" class="settings" onclick="toggleSettings()" title="Settings" alt="Settings">
+    <div class="darkmode-toggle" id="darkmodeToggle" title="Toggle Dark Mode">🌙</div>
+
     <div class="settings-panel" id="settingsPanel">
       <label>🎵 เพลงสำหรับอารมณ์สุข:</label>
       <textarea id="happinessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
@@ -129,7 +191,7 @@
     function getRandomLink(textareaId) {
       const raw = document.getElementById(textareaId).value.trim();
       if (!raw) return null;
-      const links = raw.split("\\n").map(s => s.trim()).filter(s => s);
+      const links = raw.split("\n").map(s => s.trim()).filter(s => s);
       return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
     }
 
@@ -179,7 +241,7 @@
         if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
         if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
         if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
-        if (topMood === "neutral")  url = getRandomLink("neutralLinks")  || "https://www.youtube.com/watch?v=jfKfPfyJRdk&pp=ygUQbmV1dHJhbCBzb25nIG1peA%3D%3D";
+        if (topMood === "neutral")  url = getRandomLink("neutralLinks")  || "https://www.youtube.com/watch?v=5qap5aO4i9A";
 
         document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
       })
@@ -190,7 +252,7 @@
       });
     }
 
-    // Save and load from localStorage
+    // Save and load from localStorage for playlists
     const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks', 'neutralLinks'];
     textareas.forEach(id => {
       const el = document.getElementById(id);
@@ -198,6 +260,28 @@
       el.addEventListener('input', () => {
         localStorage.setItem(id, el.value);
       });
+    });
+
+    // Dark mode toggle
+    const darkToggle = document.getElementById('darkmodeToggle');
+    function setDarkMode(on) {
+      if(on) {
+        document.body.classList.add('dark');
+        darkToggle.textContent = '☀️';
+        localStorage.setItem('darkMode', 'true');
+      } else {
+        document.body.classList.remove('dark');
+        darkToggle.textContent = '🌙';
+        localStorage.setItem('darkMode', 'false');
+      }
+    }
+    // Load dark mode state from localStorage on start
+    const darkModeStored = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(darkModeStored);
+
+    darkToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.contains('dark');
+      setDarkMode(!isDark);
     });
   </script>
 </body>
