@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -127,7 +127,7 @@
     function getRandomLink(textareaId) {
       const raw = document.getElementById(textareaId).value.trim();
       if (!raw) return null;
-      const links = raw.split("\n").map(s => s.trim()).filter(s => s);
+      const links = raw.split("\\n").map(s => s.trim()).filter(s => s);
       return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
     }
 
@@ -173,12 +173,12 @@
 
         document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
 
-        let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // default happy
+        let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // happy default
         if (topMood === "happiness") url = getRandomLink("happinessLinks") || "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp";
-        if (topMood === "sadness") url = getRandomLink("sadnessLinks") || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
-        if (topMood === "anger") url = getRandomLink("angerLinks") || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
+        if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
+        if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
 
-        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood} </a>`;
+        document.getElementById("linkContainer").innerHTML = `<a href="\${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
       })
       .catch(err => {
         document.getElementById("loading").style.display = "none";
@@ -186,6 +186,16 @@
         console.error(err);
       });
     }
+
+    // Save and load inputs from localStorage
+    const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks'];
+    textareas.forEach(id => {
+      const el = document.getElementById(id);
+      el.value = localStorage.getItem(id) || '';
+      el.addEventListener('input', () => {
+        localStorage.setItem(id, el.value);
+      });
+    });
   </script>
 </body>
 </html>
