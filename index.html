@@ -78,29 +78,29 @@
   <div class="container">
     <h1>AI Mood DJ 🎧</h1>
     <div class="tutorial">
-      <h3>📋 How to Use:</h3>
+      <h3>📋 วิธีใช้งาน:</h3>
       <ol>
-        <li>🛠️ Click the gear icon → Paste your YouTube links for each mood (one per line)</li>
-        <li>📷 Show an emotion on your face in front of the camera</li>
-        <li>🤖 AI will detect your mood and play a matching random song</li>
+        <li>🛠️ คลิกปุ่มรูปเฟือง → วางลิงก์ YouTube สำหรับแต่ละอารมณ์ (ใส่ทีละบรรทัด)</li>
+        <li>📷 แสดงอารมณ์ผ่านใบหน้าของคุณหน้ากล้อง</li>
+        <li>🤖 AI จะตรวจจับอารมณ์ของคุณและเปิดเพลงที่เหมาะสมแบบสุ่ม</li>
       </ol>
     </div>
 
     <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" width="24" class="settings" onclick="toggleSettings()" title="Settings">
     <div class="settings-panel" id="settingsPanel">
-      <label>🎵 Happy Mood Songs:</label>
-      <textarea id="happinessLinks" placeholder="One YouTube link per line..."></textarea>
-      <label>🎵 Sad Mood Songs:</label>
-      <textarea id="sadnessLinks" placeholder="One YouTube link per line..."></textarea>
-      <label>🎵 Angry Mood Songs:</label>
-      <textarea id="angerLinks" placeholder="One YouTube link per line..."></textarea>
+      <label>🎵 เพลงสำหรับอารมณ์สุข:</label>
+      <textarea id="happinessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+      <label>🎵 เพลงสำหรับอารมณ์เศร้า:</label>
+      <textarea id="sadnessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+      <label>🎵 เพลงสำหรับอารมณ์โกรธ:</label>
+      <textarea id="angerLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
     </div>
 
     <video id="video" autoplay muted playsinline></video>
     <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
-    <button onclick="takePhoto()">📸 Take Photo</button>
-    <p id="loading" style="display:none;">Analyzing mood...</p>
-    <p id="moodResult">Your mood will appear here...</p>
+    <button onclick="takePhoto()">📸 📸 ถ่ายภาพ</button>
+    <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
+    <p id="moodResult">อารมณ์ของคุณจะแสดงที่นี่...</p>
     <div id="linkContainer"></div>
   </div>
 
@@ -115,7 +115,7 @@
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       .then(stream => { video.srcObject = stream; })
       .catch(err => {
-        alert("Please allow camera access and use Chrome or Safari.");
+        alert("กรุณาอนุญาตให้เข้าถึงกล้อง และใช้ Chrome หรือ Safari");
         console.error("Camera error:", err);
       });
 
@@ -127,7 +127,7 @@
     function getRandomLink(textareaId) {
       const raw = document.getElementById(textareaId).value.trim();
       if (!raw) return null;
-      const links = raw.split("\\n").map(s => s.trim()).filter(s => s);
+      const links = raw.split("\n").map(s => s.trim()).filter(s => s);
       return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
     }
 
@@ -163,7 +163,7 @@
         document.getElementById("loading").style.display = "none";
         const emotions = data?.faces?.[0]?.attributes?.emotion;
         if (!emotions) {
-          document.getElementById("moodResult").textContent = "No face detected.";
+          document.getElementById("moodResult").textContent = "ไม่พบใบหน้า";
           return;
         }
 
@@ -171,22 +171,21 @@
         if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
         if (topMood === "surprise") topMood = "happiness";
 
-        document.getElementById("moodResult").textContent = "Detected Mood: " + topMood;
+        document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
 
         let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // default happy
         if (topMood === "happiness") url = getRandomLink("happinessLinks") || "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp";
         if (topMood === "sadness") url = getRandomLink("sadnessLinks") || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
         if (topMood === "anger") url = getRandomLink("angerLinks") || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
 
-        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 Play a ${topMood} mix</a>`;
+        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood} </a>`;
       })
       .catch(err => {
         document.getElementById("loading").style.display = "none";
-        document.getElementById("moodResult").textContent = "Error analyzing mood.";
+        document.getElementById("moodResult").textContent = "เกิดข้อผิดพลาดในการวิเคราะห์";
         console.error(err);
       });
     }
   </script>
 </body>
 </html>
-
