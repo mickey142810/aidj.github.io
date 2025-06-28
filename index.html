@@ -1,111 +1,107 @@
+It seems like I can’t do more advanced data analysis right now. Please try again later.
+
+However, you can still use the **HTML code** I provided in the previous messages by copying and pasting it into a `.html` file using any code editor (like VS Code, Notepad++, etc.), then open it in a browser or deploy it on Netlify/Vercel.
+
+Let me know if you’d like me to walk you through how to create the `.html` file manually or host it online.
+
+
+แน่นอน! ด้านล่างคือเวอร์ชัน **AI Mood DJ (ภาษาไทย)** — พร้อมคำแปลและอินเทอร์เฟซเป็นภาษาไทยทั้งหมด
+รวมถึง:
+✅ กล้องใช้งานได้
+✅ ผู้ใช้สามารถใส่ลิงก์ YouTube สำหรับอารมณ์แต่ละแบบได้
+✅ รองรับ 3 อารมณ์หลัก: สุข เศร้า โกรธ
+(อารมณ์ **ขยะแขยง = เศร้า**, **ประหลาดใจ = สุข**)
+
+---
+
+### ✅ HTML (ภาษาไทยพร้อมใช้งาน)
+
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Mood DJ 🎶</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #e0f7fa, #ffffff);
-      font-family: 'Poppins', sans-serif;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
+      font-family: sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
       padding: 20px;
       text-align: center;
     }
-
     .container {
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-      padding: 20px;
       max-width: 400px;
-      width: 100%;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      position: relative;
     }
-
-    h1 {
-      color: #1e88e5;
+    .settings {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+    .settings-panel {
+      display: none;
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+    }
+    .settings-panel input {
+      width: 100%;
       margin-bottom: 10px;
     }
-
-    p.description {
-      color: #555;
-      font-size: 1rem;
-    }
-
-    video, canvas {
-      border-radius: 15px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-      margin: 10px 0;
+    video {
       width: 100%;
-      height: auto;
+      border-radius: 10px;
     }
-
     button {
-      background: #1e88e5;
-      color: #fff;
-      padding: 12px 25px;
-      font-size: 1rem;
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-weight: bold;
+      background-color: #1e88e5;
+      color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      margin-top: 10px;
-      font-weight: 600;
     }
-
-    button:hover {
-      background: #1565c0;
-    }
-
-    #moodResult {
-      font-size: 1.3em;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-
-    #loading {
-      margin-top: 8px;
-      font-style: italic;
-      color: #888;
-      display: none;
-    }
-
     a {
-      color: #43a047;
-      font-size: 1.1em;
-      display: inline-block;
-      margin-top: 12px;
+      display: block;
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
       text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .logo {
-      width: 70px;
-      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="https://cdn-icons-png.flaticon.com/512/727/727245.png" alt="DJ Icon" class="logo">
-    <h1>AI Mood DJ</h1>
-    <p class="description">Take a selfie and let the AI pick music to match your vibe 🎵</p>
+    <h1>AI Mood DJ 🎧</h1>
+    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" width="24" class="settings" onclick="toggleSettings()" title="ตั้งค่า">
 
-    <!-- ✅ MOBILE-FRIENDLY VIDEO -->
+    <div class="settings-panel" id="settingsPanel">
+      <label>เพลงสำหรับอารมณ์สุข (ลิงก์ YouTube):</label>
+      <input type="url" id="happinessLink" placeholder="https://...">
+      <label>เพลงสำหรับอารมณ์เศร้า (ลิงก์ YouTube):</label>
+      <input type="url" id="sadnessLink" placeholder="https://...">
+      <label>เพลงสำหรับอารมณ์โกรธ (ลิงก์ YouTube):</label>
+      <input type="url" id="angerLink" placeholder="https://...">
+    </div>
+
     <video id="video" autoplay muted playsinline></video>
     <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
-
-    <button onclick="takePhoto()">📸 Take Photo</button>
-    <p id="loading">Analyzing mood...</p>
-    <p id="moodResult">Your mood will appear here...</p>
+    <button onclick="takePhoto()">📸 ถ่ายภาพ</button>
+    <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
+    <p id="moodResult">จะแสดงผลอารมณ์ที่ตรวจพบที่นี่</p>
     <div id="linkContainer"></div>
   </div>
 
@@ -115,35 +111,23 @@
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const result = document.getElementById("moodResult");
-    const linkContainer = document.getElementById("linkContainer");
-    const loading = document.getElementById("loading");
 
-    const emotionLinks = {
-      happiness: "https://youtube.com/playlist?list=PLplXQ2cg9B_qrNvF8KaDew3EetUqO8jBo",
-      sadness: "https://youtube.com/playlist?list=PLRyNF0_q1iaTt962dFWOcOl5KeOZ14Cms",
-      anger: "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q",
-      neutral: "https://www.youtube.com/watch?v=XXYlFuWEuKI&list=RDQMgEzdN5RuCXE&start_radio=1",
-      surprise: "https://youtube.com/playlist?list=PLplXQ2cg9B_qrNvF8KaDew3EetUqO8jBo",
-      fear: "https://youtube.com/playlist?list=PLRyNF0_q1iaTt962dFWOcOl5KeOZ14Cms",
-      disgust: "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q"
-    };
-
-    // ✅ Start video stream (mobile safe)
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-      .then(stream => {
-        video.srcObject = stream;
-      })
+      .then(stream => { video.srcObject = stream; })
       .catch(err => {
-        alert("Please allow camera access. If you're in an app browser (e.g. Facebook), try using Chrome or Safari.");
-        console.error("Camera access error:", err);
+        alert("กรุณาอนุญาตให้เข้าถึงกล้อง และเปิดด้วย Chrome หรือ Safari");
+        console.error("Camera error:", err);
       });
 
-    function takePhoto() {
-      loading.style.display = "block";
-      result.textContent = "";
-      linkContainer.innerHTML = "";
+    function toggleSettings() {
+      const panel = document.getElementById("settingsPanel");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
 
+    function takePhoto() {
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("moodResult").textContent = "";
+      document.getElementById("linkContainer").innerHTML = "";
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(blob => {
         const reader = new FileReader();
@@ -169,24 +153,39 @@
       })
       .then(res => res.json())
       .then(data => {
-        loading.style.display = "none";
+        document.getElementById("loading").style.display = "none";
         const emotions = data?.faces?.[0]?.attributes?.emotion;
         if (!emotions) {
-          result.textContent = "No face detected. Try again!";
+          document.getElementById("moodResult").textContent = "ไม่พบใบหน้า ลองใหม่อีกครั้ง!";
           return;
         }
 
-        const topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
-        result.textContent = "Detected Mood: " + topMood;
-        const url = emotionLinks[topMood] || emotionLinks.neutral;
-        linkContainer.innerHTML = `<a href="${url}" target="_blank">🎶 Open ${topMood} Playlist</a>`;
+        let topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
+        if (topMood === "disgust") topMood = "sadness";
+        if (topMood === "surprise") topMood = "happiness";
+
+        document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
+
+        let url = "https://www.youtube.com/watch?v=XXYlFuWEuKI";
+        if (topMood === "happiness") url = document.getElementById("happinessLink").value || url;
+        if (topMood === "sadness") url = document.getElementById("sadnessLink").value || url;
+        if (topMood === "anger") url = document.getElementById("angerLink").value || url;
+
+        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎵 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
       })
       .catch(err => {
-        loading.style.display = "none";
-        result.textContent = "Error analyzing mood.";
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("moodResult").textContent = "เกิดข้อผิดพลาดในการวิเคราะห์";
         console.error(err);
       });
     }
   </script>
 </body>
 </html>
+```
+
+---
+
+✅ คุณสามารถวางโค้ดนี้ในไฟล์ชื่อ `index.html` แล้วเปิดด้วยเบราว์เซอร์ หรืออัปโหลดขึ้น Vercel/Netlify ได้ทันที
+
+อยากให้ส่งเป็นไฟล์ `.html` สำหรับดาวน์โหลดเลยไหมครับ?
