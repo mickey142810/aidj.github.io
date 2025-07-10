@@ -67,6 +67,9 @@
       width: 100%;
       border-radius: 10px;
     }
+    input[type="file"] {
+      margin-top: 10px;
+    }
     button {
       margin-top: 10px;
       padding: 10px 20px;
@@ -141,7 +144,7 @@
       <h3>📋 วิธีใช้งาน:</h3>
       <ol>
         <li>🛠️ คลิกปุ่มรูปเฟือง → วางลิงก์ YouTube สำหรับแต่ละอารมณ์ (ใส่ทีละบรรทัด)</li>
-        <li>📷 แสดงอารมณ์ผ่านใบหน้าของคุณหน้ากล้อง</li>
+        <li>📷 ถ่ายภาพผ่านกล้อง หรือ 📤 อัปโหลดภาพจากเครื่องของคุณ</li>
         <li>🤖 AI จะตรวจจับอารมณ์ของคุณและเปิดเพลงที่เหมาะสมแบบสุ่ม</li>
       </ol>
     </div>
@@ -161,6 +164,7 @@
     </div>
 
     <video id="video" autoplay muted playsinline></video>
+    <input type="file" accept="image/*" id="uploadInput" onchange="handleUpload(event)">
     <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
     <button onclick="takePhoto()">📸 ถ่ายภาพ</button>
     <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
@@ -210,6 +214,22 @@
       }, "image/jpeg");
     }
 
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("moodResult").textContent = "";
+      document.getElementById("linkContainer").innerHTML = "";
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result.split(',')[1];
+        detectEmotion(base64);
+      };
+      reader.readAsDataURL(file);
+    }
+
     function detectEmotion(base64) {
       const data = new URLSearchParams();
       data.append("api_key", apiKey);
@@ -252,7 +272,6 @@
       });
     }
 
-    // Save and load from localStorage for playlists
     const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks', 'neutralLinks'];
     textareas.forEach(id => {
       const el = document.getElementById(id);
@@ -262,7 +281,6 @@
       });
     });
 
-    // Dark mode toggle
     const darkToggle = document.getElementById('darkmodeToggle');
     function setDarkMode(on) {
       if(on) {
@@ -275,7 +293,6 @@
         localStorage.setItem('darkMode', 'false');
       }
     }
-    // Load dark mode state from localStorage on start
     const darkModeStored = localStorage.getItem('darkMode') === 'true';
     setDarkMode(darkModeStored);
 
