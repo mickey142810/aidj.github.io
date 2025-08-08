@@ -2,208 +2,80 @@
 <html lang="th">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Mood DJ — Dark UI</title>
-<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>AI Mood DJ — Mobile Friendly</title>
 <style>
-  :root{
-    --bg-1:#091226;
-    --bg-2:#0f1b2b;
-    --card:#0f2433;
-    --muted:#9fb3c8;
-    --accent:#6ee7b7;
-    --accent-2:#5aa9ff;
-    --glass: rgba(255,255,255,0.04);
-    --glass-2: rgba(255,255,255,0.03);
-    --danger: #ff7a7a;
-    --glass-border: rgba(255,255,255,0.06);
-    --glass-glow: 0 10px 30px rgba(80,170,255,0.06);
+  :root {
+    --bg: #081018;
+    --card: #0f1720;
+    --muted: #9fb3c8;
+    --accent1: #6ee7b7;
+    --accent2: #5aa9ff;
   }
 
-  html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-  body{
-    background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
-                radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
-                linear-gradient(180deg,var(--bg-1),var(--bg-2));
-    color:#d8eef7;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:28px;
-    gap:18px;
+  body {
+    background-color: var(--bg);
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
   }
 
-  .app {
-    width:100%;
-    max-width:980px;
-    display:grid;
-    grid-template-columns: 420px 1fr;
-    gap:20px;
-    align-items:start;
-  }
-
-  .panel {
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-glow);
-    border-radius:16px;
-    padding:18px;
-    position:relative;
-  }
-
-  header.brand {
-    display:flex;
-    gap:12px;
-    align-items:center;
-    margin-bottom:8px;
+  .card {
+    background-color: var(--card);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    max-width: 90%;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
   }
 
   .logo {
-    width:56px;
-    height:56px;
-    border-radius:12px;
-    overflow:hidden;
-    box-shadow: 0 6px 18px rgba(90,170,255,0.12);
-    flex-shrink: 0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background: #111;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin: 0 auto 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
   }
 
-  .logo-gradient {
-    background: radial-gradient(circle at center, var(--accent) 0%, var(--accent-2) 100%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
-    font-weight:700;
-    font-size:20px;
-    width:100%;
-    height:100%;
-    border-radius:12px;
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
   }
 
-  .howto{
-    background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-    border-radius:12px;padding:12px;margin:14px 0;color:var(--muted);
-    font-size:13px; line-height:1.5;
-    border:1px solid rgba(255,255,255,0.02);
+  p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.4;
   }
 
-  .camera-wrap{
-    margin-top:10px;
-    border-radius:12px;
-    overflow:hidden;
-    border:1px solid rgba(255,255,255,0.03);
-    background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.25));
+  @media (max-width: 500px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+    .logo {
+      width: 90px;
+      height: 90px;
+      font-size: 2.5rem;
+    }
   }
-  video#video{
-    display:block; width:100%; height:240px; object-fit:cover;
-    filter: saturate(1.02) contrast(1.02);
-  }
-
-  .controls{
-    display:flex;gap:8px;margin-top:12px;
-    align-items:center;flex-wrap:wrap;
-  }
-
-  .btn {
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border:1px solid rgba(255,255,255,0.04);
-    color:var(--accent-2);
-    padding:10px 14px;border-radius:12px;
-    cursor:pointer;font-weight:600;font-size:14px;
-    display:inline-flex;align-items:center;gap:8px;
-  }
-  .btn.prim { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#012; }
-
-  input[type=file]{ display:none; }
-
-  .status {
-    margin-top:10px;font-size:14px;color:var(--muted);
-    min-height:22px;
-  }
-
-  .stage {
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border:1px solid var(--glass-border);
-    border-radius:16px;padding:18px;
-  }
-  .mood-card{
-    display:flex;align-items:center;gap:16px;
-  }
-  .mood-emoji{
-    width:84px;height:84px;border-radius:14px;
-    background:linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-    display:flex;align-items:center;justify-content:center;
-    font-size:40px;
-  }
-  .mood-info h2{ margin:0;font-size:20px }
-  .mood-info p{ margin:6px 0 0 0;color:var(--muted) }
 </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="AI Mood DJ — Dark UI">
-    <!-- LEFT -->
-    <section class="panel" aria-label="Controls panel">
-      <div class="brand header">
-        <div class="logo" aria-label="AI Mood DJ logo" role="img" tabindex="0">
-          <!-- OPTION 1: Image -->
-          <!-- <img src="logo.png" alt="AI Mood DJ Logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"> -->
-          <!-- OPTION 2: Gradient circle -->
-          <div class="logo-gradient">AI</div>
-        </div>
-        <div class="brand">
-          <h1>AI Mood DJ</h1>
-          <p>มิวสิคตามอารมณ์ — ตรวจจับจากรูป/กล้อง</p>
-        </div>
-      </div>
-      <div class="howto">
-        <strong>วิธีใช้:</strong>
-        <ol style="padding-left:18px;margin:8px 0 0 0;">
-          <li>กด <em>ตั้งค่า</em> เพื่อวางลิงก์เพลง</li>
-          <li>อนุญาตกล้องหรืออัปโหลดรูป</li>
-          <li>AI จะวิเคราะห์และแนะนำเพลง</li>
-        </ol>
-      </div>
-      <div class="camera-wrap">
-        <video id="video" autoplay muted playsinline></video>
-      </div>
-      <div class="controls">
-        <label for="uploadFile" class="btn">📤 อัปโหลด</label>
-        <input id="uploadFile" type="file" accept="image/*" />
-        <button id="snap" class="btn prim">📸 ถ่าย</button>
-      </div>
-      <div class="status" id="statusArea">พร้อมใช้งาน</div>
-    </section>
-
-    <!-- RIGHT -->
-    <section class="stage" aria-label="Mood & tracks">
-      <div class="mood-card" id="moodCard">
-        <div class="mood-emoji" id="moodEmoji">🙂</div>
-        <div class="mood-info">
-          <h2 id="moodTitle">ยังไม่ได้วิเคราะห์</h2>
-          <p id="moodDesc">อัปโหลดหรือถ่ายรูปเพื่อให้ AI ตรวจจับอารมณ์</p>
-        </div>
-      </div>
-      <div id="tracksGrid" style="margin-top:14px;"></div>
-    </section>
+  <div class="card">
+    <div class="logo">🤖</div>
+    <h1>AI Mood DJ</h1>
+    <p>Let AI match your tunes to your mood — anywhere, anytime.</p>
   </div>
-
-<script>
-const video = document.getElementById('video');
-const statusArea = document.getElementById('statusArea');
-
-async function startCamera(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    video.srcObject = stream;
-  } catch(e){
-    statusArea.textContent = "ไม่สามารถเปิดกล้องได้";
-  }
-}
-startCamera();
-</script>
 </body>
 </html>
