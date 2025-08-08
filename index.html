@@ -1,160 +1,157 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>AI Mood DJ 🎧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Mood DJ</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #121212;
-      color: #ddd;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      line-height: 1.6;
-      text-rendering: optimizeLegibility;
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #1e1e2f;
+      color: #fff;
     }
     header {
-      margin: 20px 0 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    header svg {
-      width: 40px;
-      height: 40px;
-      fill: #42a5f5;
-      transition: all 0.3s ease;
-    }
-    h1 {
-      font-weight: 700;
-      font-size: 1.8rem;
-      margin: 0;
-    }
-    main {
-      background: #1e1e1e;
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(66, 165, 245, 0.4);
       padding: 20px;
-      max-width: 420px;
-      width: 95vw;
-      box-sizing: border-box;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: #282c34;
+      text-align: center;
     }
-    .instructions {
-      background: #263238;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      margin-bottom: 16px;
+    #status {
+      margin: 20px;
+      text-align: center;
     }
-    label {
+    #moodBadge {
+      font-size: 1.5em;
+      padding: 10px 20px;
+      border-radius: 30px;
+      background: #444;
+      display: inline-block;
+    }
+    #tracks {
+      margin: 20px auto;
+      max-width: 600px;
+    }
+    iframe {
       display: block;
-      margin: 12px 0 4px;
-      font-weight: 600;
-      font-size: 0.9rem;
+      margin: 15px auto;
+      width: 100%;
+      height: 300px;
+      border: none;
+    }
+    #sheet {
+      display: none;
+      background: #333;
+      padding: 20px;
+      margin: 20px;
+      border-radius: 10px;
     }
     textarea {
       width: 100%;
-      height: 60px;
-      border-radius: 8px;
+      height: 80px;
+      margin-bottom: 15px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
       border: none;
-      resize: vertical;
-      padding: 8px;
-      font-size: 0.9rem;
-      background: #121212;
-      color: #ddd;
-      border: 1.5px solid #42a5f5;
-      box-sizing: border-box;
-    }
-    textarea::placeholder {
-      color: #555;
-    }
-    video {
-      width: 100%;
-      border-radius: 12px;
-      background: #000;
-    }
-    button, .fab {
-      margin-top: 12px;
-      padding: 12px 20px;
-      font-weight: bold;
-      border-radius: 12px;
+      border-radius: 5px;
       cursor: pointer;
-      background: linear-gradient(135deg, #1e88e5, #42a5f5);
-      color: white;
-      border: none;
-      width: 100%;
-      font-size: 1rem;
-      transition: all 0.3s ease;
     }
-    button:hover, .fab:hover {
-      background: #1565c0;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(90, 170, 255, 0.15);
-    }
-    #msg {
-      margin-top: 10px;
-      min-height: 1.5em;
-      text-align: center;
-      color: #f88;
-      font-weight: 600;
-    }
-    #moodResult {
-      margin-top: 15px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-align: center;
-      color: #42a5f5;
-    }
-    #linkContainer {
-      margin-top: 15px;
-      text-align: center;
-    }
-    #linkContainer a {
-      color: #80cbc4;
-      font-weight: 700;
-      text-decoration: none;
-      word-break: break-word;
-    }
-    input[type="file"] {
-      margin-top: 12px;
-      width: 100%;
-      color: #ddd;
-    }
-    .mood-badge {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.06); }
-      100% { transform: scale(1); }
-    }
+    #openSheet { background: #0066cc; color: white; }
+    #closeSheetBtn, #saveSheetBtn { background: #444; color: white; }
   </style>
 </head>
 <body>
-  <!-- Same HTML content & script as provided (unchanged) -->
+  <header>
+    <h1>AI Mood DJ</h1>
+    <div id="status">Mood detected: <span id="moodBadge">Neutral</span></div>
+    <button id="openSheet">Edit Mood Sheet</button>
+  </header>
+
+  <div id="tracks"></div>
+
+  <div id="sheet">
+    <h3>Edit YouTube links for each mood</h3>
+    <label>Happiness:</label>
+    <textarea id="happinessLinks">https://www.youtube.com/watch?v=XXYlFuWEuKI</textarea>
+    <label>Sadness:</label>
+    <textarea id="sadnessLinks">https://www.youtube.com/watch?v=R4vkVHijdQk</textarea>
+    <label>Anger:</label>
+    <textarea id="angerLinks">https://www.youtube.com/watch?v=eTedtzozrAo</textarea>
+    <label>Neutral:</label>
+    <textarea id="neutralLinks">https://www.youtube.com/watch?v=OpQFFLBMEPI</textarea>
+    <br/>
+    <button id="saveSheetBtn">Save</button>
+    <button id="closeSheetBtn">Close</button>
+  </div>
+
+  <script>
+    const moodBadge = document.getElementById('moodBadge');
+    const tracksEl = document.getElementById('tracks');
+    const sheet = document.getElementById('sheet');
+    const openSheet = document.getElementById('openSheet');
+    const closeSheetBtn = document.getElementById('closeSheetBtn');
+    const saveSheetBtn = document.getElementById('saveSheetBtn');
+
+    const ids = ['happinessLinks','sadnessLinks','angerLinks','neutralLinks'];
+    let moodData = {};
+
+    function getMood() {
+      // Randomly simulate mood detection
+      const moods = ['happiness', 'sadness', 'anger', 'neutral'];
+      return moods[Math.floor(Math.random() * moods.length)];
+    }
+
+    function loadMoodLinks() {
+      ids.forEach(id => {
+        const textarea = document.getElementById(id);
+        moodData[id.replace('Links','')] = textarea.value.split('\n').filter(Boolean);
+      });
+    }
+
+    function showTracksForMood(mood) {
+      tracksEl.innerHTML = '';
+      const links = moodData[mood] || [];
+      links.forEach(link => {
+        const videoId = extractYouTubeID(link);
+        if (videoId) {
+          const iframe = document.createElement('iframe');
+          iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=0`;
+          tracksEl.appendChild(iframe);
+        }
+      });
+      moodBadge.textContent = mood.charAt(0).toUpperCase() + mood.slice(1);
+    }
+
+    function extractYouTubeID(url) {
+      const match = url.match(/(?:v=|\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
+    }
+
+    openSheet.addEventListener('click', () => {
+      sheet.style.display = 'block';
+    });
+
+    closeSheetBtn.addEventListener('click', () => {
+      sheet.style.display = 'none';
+    });
+
+    saveSheetBtn.addEventListener('click', () => {
+      loadMoodLinks();
+      sheet.style.display = 'none';
+      const mood = getMood();
+      showTracksForMood(mood);
+    });
+
+    // Initial load
+    loadMoodLinks();
+    const initialMood = getMood();
+    showTracksForMood(initialMood);
+  </script>
 </body>
 </html>
-tatusEl = document.getElementById('status');
-const moodBadge = document.getElementById('moodBadge');
-const moodLabel = document.getElementById('moodLabel');
-const moodText = document.getElementById('moodText');
-const tracksEl = document.getElementById('tracks');
-const debugEl = document.getElementById('debug');
-const logoEl = document.getElementById('logo');
-
-const sheet = document.getElementById('sheet');
-const openSheet = document.getElementById('openSheet');
-const closeSheetBtn = document.getElementById('closeSheetBtn');
-const saveSheetBtn = document.getElementById('saveSheetBtn');
-
-/* textareas ids */
-const ids = ['happinessLinks','sadnessLinks','angerLinks','neutralLinks'];
-
-/*
