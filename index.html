@@ -1,510 +1,329 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>AI Mood DJ — Mobile Friendly</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>AI Mood DJ 🎧</title>
 <style>
-  :root{
-    --bg:#081018;
-    --card:#0f1720;
-    --muted:#9fb3c8;
-    --accent1:#5ad0ff;
-    --accent2:#7effc9;
-    --glass: rgba(255,255,255,0.03);
-    --glass-border: rgba(255,255,255,0.04);
-    --success:#6ee7b7;
-    --danger:#ff7a7a;
-    --max-width:880px;
-    --radius:14px;
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #121212;
+    color: #ddd;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
   }
-
-  /* Page */
-  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg, #041223, #071427); color:#e6f7ff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
-  .wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px; box-sizing:border-box;}
-  .app{
-    width:100%; max-width:var(--max-width); display:flex; flex-direction:column; gap:16px;
-    margin-inline:auto;
+  header {
+    margin: 20px 0 10px;
+    display: flex; align-items: center; gap: 10px;
   }
-
-  /* Header with logo */
-  header.topbar{
-    display:flex; align-items:center; gap:12px; justify-content:center;
+  header svg {
+    width: 40px; height: 40px;
+    fill: #42a5f5;
   }
-  .logo {
-    width:72px; height:72px; border-radius:18px;
-    background: linear-gradient(135deg,var(--accent1),var(--accent2));
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 10px 30px rgba(90,170,255,0.08);
+  h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin: 0;
   }
-  .logo svg{ width:56px; height:56px; display:block; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5)); }
-  .title {
-    text-align:center;
+  main {
+    background: #1e1e1e;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(66,165,245,0.4);
+    padding: 20px;
+    max-width: 420px;
+    width: 95vw;
+    box-sizing: border-box;
   }
-  h1{margin:0; font-size:18px; letter-spacing:-0.2px;}
-  p.subtitle{ margin:0; font-size:13px; color:var(--muted); }
-
-  /* Card */
-  .card{
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:var(--radius); padding:14px; border:1px solid var(--glass-border);
-    box-shadow:0 6px 30px rgba(0,0,0,0.5);
+  .instructions {
+    background: #263238;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.4;
   }
-
-  /* camera preview */
-  .preview{
-    border-radius:12px; overflow:hidden; background:#071426; border:1px solid rgba(255,255,255,0.02);
-    display:flex; align-items:center; justify-content:center; height:260px;
+  label {
+    display: block;
+    margin: 12px 0 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
   }
-  video#video{ width:100%; height:100%; object-fit:cover; display:block; -webkit-transform: translateZ(0); }
-
-  /* controls - big tap targets */
-  .controls{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
-  .btn{
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border:1px solid var(--glass-border);
-    color:var(--accent1);
-    padding:12px 14px; border-radius:12px; font-weight:700; font-size:15px;
-    display:inline-flex; gap:8px; align-items:center; justify-content:center; cursor:pointer; min-width:44%;
+  textarea {
+    width: 100%;
+    height: 60px;
+    border-radius: 8px;
+    border: none;
+    resize: vertical;
+    padding: 8px;
+    font-size: 0.9rem;
+    background: #121212;
+    color: #ddd;
+    border: 1.5px solid #42a5f5;
+    box-sizing: border-box;
   }
-  .btn.primary{ background: linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021; box-shadow:0 12px 30px rgba(90,170,255,0.08); }
-  .btn.ghost{ background:transparent; color:var(--muted); border-style:dashed; min-width:36%; }
-
-  .status{ margin-top:8px; color:var(--muted); font-size:13px; text-align:center; min-height:22px; }
-
-  /* mood card */
-  .mood-row{ display:flex; gap:12px; align-items:center; margin-top:10px; }
-  .mood-badge{ width:72px; height:72px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:34px; background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); }
-  .mood-info{ flex:1; }
-  .mood-info h2{ margin:0; font-size:18px; }
-  .mood-info p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
-
-  /* tracks */
-  .tracks{ margin-top:12px; display:grid; gap:10px; grid-template-columns:1fr; }
-  .track{
-    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-    border-radius:12px; padding:10px; display:flex; gap:10px; align-items:center; border:1px solid rgba(255,255,255,0.02);
+  textarea::placeholder {
+    color: #555;
   }
-  .track .url{ font-size:13px; color:var(--muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-  .track .play{ margin-left:auto; background:linear-gradient(90deg,var(--accent2),var(--accent1)); border:none; padding:8px 12px; border-radius:10px; color:#022; font-weight:800; }
-
-  /* logo pulse when ready */
-  .logo.pulse svg { animation:beat 1000ms ease infinite; transform-origin:center; }
-  @keyframes beat { 0%{ transform:scale(1); } 50%{ transform:scale(1.08); } 100%{ transform:scale(1); } }
-
-  /* settings bottom sheet (mobile friendly) */
-  .sheet{
-    position:fixed; left:0; right:0; bottom:-100%; min-height:40%; max-height:84vh; background:linear-gradient(180deg,#071427,#061226); border-top-left-radius:18px; border-top-right-radius:18px;
-    box-shadow:0 -20px 60px rgba(0,0,0,0.6); padding:14px; transition:bottom .36s cubic-bezier(.2,.9,.2,1); z-index:60;
-    border:1px solid rgba(255,255,255,0.03);
+  video {
+    width: 100%;
+    border-radius: 12px;
+    background: #000;
   }
-  .sheet.open{ bottom:0; }
-  .sheet .grab{ width:56px; height:6px; background:rgba(255,255,255,0.06); border-radius:99px; margin:6px auto 10px; }
-
-  .sheet h3{ margin:6px 0 10px 0; text-align:center; }
-  .sheet textarea{ width:100%; min-height:78px; resize:vertical; padding:10px; border-radius:10px; background:rgba(255,255,255,0.02); color:#dff7ff; border:1px solid rgba(255,255,255,0.03); }
-
-  .sheet .sheet-actions{ display:flex; gap:8px; margin-top:8px; justify-content:flex-end; }
-  .sheet .btn{ min-width:unset; padding:10px 12px; }
-
-  /* misc */
-  .small{ font-size:12px; color:var(--muted); }
-  @media(min-width:720px){
-    .tracks{ grid-template-columns: repeat(2,1fr); }
-    .controls .btn{ min-width:160px; }
-    .preview{ height:360px; }
+  button {
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #1e88e5;
+    color: white;
+    border: none;
+    width: 100%;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background: #1565c0;
+  }
+  #msg {
+    margin-top: 10px;
+    min-height: 1.5em;
+    text-align: center;
+    color: #f88;
+    font-weight: 600;
+  }
+  #moodResult {
+    margin-top: 15px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    color: #42a5f5;
+  }
+  #linkContainer {
+    margin-top: 15px;
+    text-align: center;
+  }
+  #linkContainer a {
+    color: #80cbc4;
+    font-weight: 700;
+    text-decoration: none;
+    word-break: break-word;
+  }
+  input[type="file"] {
+    margin-top: 12px;
+    width: 100%;
+    color: #ddd;
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <main class="app" role="main" aria-label="AI Mood DJ app">
-    <!-- Header -->
-    <header class="topbar">
-      <div class="logo" id="logo">
-        <!-- SVG AI Mood DJ Logo (robot DJ with tiny waveform) -->
-        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
-          <defs>
-            <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#5ad0ff"/><stop offset="1" stop-color="#7effc9"/></linearGradient>
-          </defs>
-          <g fill="none" stroke="none">
-            <rect x="6" y="14" width="52" height="36" rx="8" fill="url(#g1)"></rect>
-            <circle cx="20" cy="33" r="4" fill="#02101a"></circle>
-            <circle cx="44" cy="33" r="4" fill="#02101a"></circle>
-            <rect x="24" y="40" width="16" height="4" rx="2" fill="#02101a"></rect>
-            <path d="M10 24c0-2.8 2.2-5 5-5h2v-4c0-1.1.9-2 2-2h1" stroke="#02101a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M54 24c0-2.8-2.2-5-5-5h-2v-4c0-1.1-.9-2-2-2h-1" stroke="#02101a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- waveform bars -->
-            <g transform="translate(14,10)" fill="#02101a">
-              <rect x="34" y="22" width="2" height="8" rx="1"/>
-              <rect x="32" y="18" width="2" height="12" rx="1"/>
-              <rect x="30" y="14" width="2" height="16" rx="1"/>
-              <rect x="28" y="20" width="2" height="10" rx="1"/>
-            </g>
-          </g>
-        </svg>
-      </div>
-      <div class="title">
-        <h1>AI Mood DJ</h1>
-        <p class="subtitle">เพลงตามอารมณ์ — ถ่ายรูปหรืออัปโหลดเพื่อเริ่ม</p>
-      </div>
-    </header>
+<header>
+  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+    <circle cx="32" cy="32" r="30" stroke="#42a5f5" stroke-width="4" fill="none"/>
+    <polygon points="26,20 46,32 26,44" fill="#42a5f5"/>
+  </svg>
+  <h1>AI Mood DJ 🎧</h1>
+</header>
 
-    <!-- Preview & controls card -->
-    <section class="card" aria-labelledby="preview-title">
-      <div id="preview-title" class="small">กล้อง / ตัวอย่างรูป</div>
-      <div class="preview" role="region" aria-label="Camera preview area">
-        <video id="video" autoplay muted playsinline></video>
-      </div>
-
-      <div class="controls" role="toolbar" aria-label="Controls">
-        <label for="fileInput" class="btn ghost" aria-hidden="true">📤 อัปโหลดรูป</label>
-        <input id="fileInput" type="file" accept="image/*" />
-        <button id="snapBtn" class="btn primary" aria-pressed="false">📸 ถ่ายภาพ</button>
-        <button id="openSheet" class="btn">⚙️ ตั้งค่า</button>
-      </div>
-
-      <div class="status" id="status">รอการใช้งาน — อนุญาตกล้องหรืออัปโหลดรูป</div>
-    </section>
-
-    <!-- Mood & tracks card -->
-    <section class="card" aria-labelledby="mood-title">
-      <div class="mood-row">
-        <div class="mood-badge" id="moodBadge">🙂</div>
-        <div class="mood-info">
-          <h2 id="moodLabel">ยังไม่ได้วิเคราะห์</h2>
-          <p id="moodText" class="small">เมื่อ AI ตรวจจับอารมณ์ จะปรากฏเพลงแนะนำด้านล่าง</p>
-        </div>
-      </div>
-
-      <div class="tracks" id="tracks"></div>
-      <div class="small" id="debug" style="margin-top:8px;color:var(--muted)"></div>
-    </section>
-  </main>
-</div>
-
-<!-- Bottom sheet settings -->
-<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Settings sheet">
-  <div class="grab" aria-hidden="true"></div>
-  <h3>ตั้งค่าเพลงตามอารมณ์</h3>
-
-  <label class="small">เพลง — สุข (happiness)</label>
-  <textarea id="happinessLinks" placeholder="วางลิงก์ YouTube ทีละบรรทัด..."></textarea>
-
-  <label class="small" style="margin-top:8px;">เพลง — เศร้า (sadness)</label>
-  <textarea id="sadnessLinks"></textarea>
-
-  <label class="small" style="margin-top:8px;">เพลง — โกรธ (anger)</label>
-  <textarea id="angerLinks"></textarea>
-
-  <label class="small" style="margin-top:8px;">เพลง — กลาง (neutral)</label>
-  <textarea id="neutralLinks"></textarea>
-
-  <div class="sheet-actions">
-    <button id="closeSheetBtn" class="btn ghost">ยกเลิก</button>
-    <button id="saveSheetBtn" class="btn primary">💾 บันทึก</button>
+<main>
+  <div class="instructions">
+    <h3>📋 วิธีใช้งาน:</h3>
+    <ol>
+      <li>🛠️ ใส่ลิงก์ YouTube สำหรับแต่ละอารมณ์ (บรรทัดละลิงก์)</li>
+      <li>📷 ถ่ายภาพผ่านกล้อง หรือ 📤 อัปโหลดภาพจากเครื่องคุณ</li>
+      <li>🤖 AI จะวิเคราะห์อารมณ์และเปิดเพลงที่เหมาะสม</li>
+    </ol>
   </div>
-</section>
+
+  <label for="happinessLinks">🎵 เพลงสำหรับอารมณ์สุข:</label>
+  <textarea id="happinessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+
+  <label for="sadnessLinks">🎵 เพลงสำหรับอารมณ์เศร้า:</label>
+  <textarea id="sadnessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+
+  <label for="angerLinks">🎵 เพลงสำหรับอารมณ์โกรธ:</label>
+  <textarea id="angerLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+
+  <label for="neutralLinks">🎵 เพลงสำหรับอารมณ์ปกติ (กลางๆ):</label>
+  <textarea id="neutralLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
+
+  <video id="video" autoplay muted playsinline></video>
+  <button id="takePhotoBtn">📸 ถ่ายภาพ</button>
+  <input type="file" accept="image/*" id="uploadInput">
+
+  <p id="msg"></p>
+  <p id="moodResult">อารมณ์ของคุณจะแสดงที่นี่...</p>
+  <div id="linkContainer"></div>
+</main>
 
 <script>
-/* -------------------------
-   Configuration — replace with your keys if needed
-   ------------------------- */
-const API_KEY = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
-const API_SECRET = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
+  // Your Face++ API keys (replace with your own)
+  const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
+  const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
 
-/* Dom references */
-const videoEl = document.getElementById('video');
-const snapBtn = document.getElementById('snapBtn');
-const fileInput = document.getElementById('fileInput');
-const statusEl = document.getElementById('status');
-const moodBadge = document.getElementById('moodBadge');
-const moodLabel = document.getElementById('moodLabel');
-const moodText = document.getElementById('moodText');
-const tracksEl = document.getElementById('tracks');
-const debugEl = document.getElementById('debug');
-const logoEl = document.getElementById('logo');
-
-const sheet = document.getElementById('sheet');
-const openSheet = document.getElementById('openSheet');
-const closeSheetBtn = document.getElementById('closeSheetBtn');
-const saveSheetBtn = document.getElementById('saveSheetBtn');
-
-/* textareas ids */
-const ids = ['happinessLinks','sadnessLinks','angerLinks','neutralLinks'];
-
-/* state */
-let mediaStream = null;
-let controller = null; // AbortController for fetches
-let inProgress = false;
-
-/* utility */
-function setStatus(text, color){
-  statusEl.textContent = text;
-  if(color) statusEl.style.color = color; else statusEl.style.color = '';
-}
-function setBusy(b){
-  inProgress = b;
-  snapBtn.disabled = b;
-  if(b) snapBtn.setAttribute('aria-pressed','true'); else snapBtn.setAttribute('aria-pressed','false');
-}
-
-/* Initialize mobile camera (robust) */
-async function initCamera(){
-  // recommended constraints for mobile friendliness
-  const constraints = { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-    videoEl.srcObject = mediaStream;
-    setStatus('กล้องพร้อมใช้งาน — กด "ถ่ายภาพ" เพื่อวิเคราะห์');
-  } catch (err) {
-    console.warn('camera init', err);
-    setStatus('ไม่สามารถเข้าถึงกล้อง — กรุณาอนุญาตหรืออัปโหลดรูปแทน', 'var(--muted)');
-  }
-}
-initCamera();
-
-/* Load saved lists */
-function loadSaved(){
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.value = localStorage.getItem(id) || '';
-  });
-}
-loadSaved();
-
-/* Save lists */
-saveSheetBtn.addEventListener('click', ()=>{
-  ids.forEach(id => {
-    const v = document.getElementById(id).value || '';
-    localStorage.setItem(id, v);
-  });
-  setStatus('บันทึกรายการเพลงเรียบร้อย', '');
-  closeSettings();
-});
-
-/* Open/close sheet (bottom) */
-openSheet.addEventListener('click', ()=> openSettings() );
-closeSheetBtn.addEventListener('click', ()=> closeSettings() );
-function openSettings(){
-  sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false');
-  // push scroll to top on mobile so sheet is fully visible
-  setTimeout(()=> sheet.scrollIntoView({behavior:'smooth'}), 200);
-}
-function closeSettings(){
-  sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true');
-}
-
-/* file upload */
-fileInput.addEventListener('change', (ev)=>{
-  const f = ev.target.files && ev.target.files[0];
-  if(!f) return;
-  setStatus('โหลดไฟล์และเตรียมวิเคราะห์...');
-  readFileAsBase64(f).then(b64 => analyzeEmotion(b64)).catch(err=> {
-    console.error(err);
-    setStatus('ไม่สามารถอ่านไฟล์ภาพ', 'var(--danger)');
-  });
-});
-function readFileAsBase64(file){
-  return new Promise((resolve, reject)=>{
-    const r = new FileReader();
-    r.onload = ()=> resolve(r.result.split(',')[1]);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
-/* Take photo — make canvas size match video track to avoid stretching */
-function captureFrame(){
-  if(!mediaStream){
-    // fallback: draw video element's displayed size
-    const w = videoEl.videoWidth || videoEl.clientWidth || 640;
-    const h = videoEl.videoHeight || videoEl.clientHeight || 480;
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoEl, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-  }
-
-  const track = mediaStream.getVideoTracks()[0];
-  const settings = track.getSettings ? track.getSettings() : {};
-  const w = settings.width || videoEl.videoWidth || 1280;
-  const h = settings.height || videoEl.videoHeight || 720;
+  const video = document.getElementById("video");
   const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  // draw centered crop if aspect mismatch
-  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-}
+  const ctx = canvas.getContext("2d");
+  const msg = document.getElementById("msg");
+  const moodResult = document.getElementById("moodResult");
+  const linkContainer = document.getElementById("linkContainer");
+  const takePhotoBtn = document.getElementById("takePhotoBtn");
+  const uploadInput = document.getElementById("uploadInput");
 
-/* Prevent multiple concurrent requests; abort previous */
-async function analyzeEmotion(imageBase64){
-  if(inProgress){
-    setStatus('กำลังประมวลผลอยู่ — กรุณารอหรือรอให้คำตอบเสร็จ', 'var(--muted)');
-    return;
-  }
-  setBusy(true);
-  setStatus('กำลังอัปโหลดและวิเคราะห์อารมณ์...');
-  moodLabel.textContent = 'กำลังประมวลผล...';
-  moodText.textContent = '';
-  tracksEl.innerHTML = '';
-  debugEl.textContent = '';
+  // Save loaded video stream
+  let stream = null;
 
-  // cancel previous
-  if(controller) controller.abort();
-  controller = new AbortController();
-
-  const params = new URLSearchParams();
-  params.append('api_key', API_KEY);
-  params.append('api_secret', API_SECRET);
-  params.append('image_base64', imageBase64);
-  params.append('return_attributes', 'emotion');
-
-  try {
-    const resp = await fetch('https://api-us.faceplusplus.com/facepp/v3/detect', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
-      body: params.toString(),
-      signal: controller.signal
-    });
-
-    if(!resp.ok) {
-      const text = await resp.text();
-      throw new Error('Face++ error: ' + resp.status + ' ' + text);
+  async function startCamera() {
+    msg.textContent = "กำลังขออนุญาตเข้ากล้อง...";
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      video.srcObject = stream;
+      msg.textContent = "กล้องพร้อมแล้ว! กดถ่ายภาพได้เลย";
+    } catch (err) {
+      msg.textContent = "ไม่สามารถเข้าถึงกล้องได้: " + err.message;
+      console.error(err);
     }
+  }
 
-    const data = await resp.json();
-    if(!data || !data.faces || data.faces.length === 0){
-      setStatus('ไม่พบใบหน้าในภาพ', 'var(--muted)');
-      moodLabel.textContent = 'ไม่พบใบหน้า';
-      moodBadge.textContent = '❓';
-      moodText.textContent = 'โปรดลองถ่ายภาพใหม่โดยให้ใบหน้าเห็นชัดเจน';
-      setBusy(false);
+  function getRandomLink(textareaId) {
+    const raw = document.getElementById(textareaId).value.trim();
+    if (!raw) return null;
+    const links = raw.split("\n").map(s => s.trim()).filter(Boolean);
+    return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
+  }
+
+  // Extract YouTube video ID from URL
+  function extractYouTubeID(url) {
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
+
+  // Create clickable link with thumbnail and title fallback
+  function createTrackCard(url) {
+    const id = extractYouTubeID(url);
+    if (!id) return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+
+    const thumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    // For demo, use URL as title because no YouTube Data API key here
+    return `
+      <a href="${url}" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; gap:12px; margin-bottom:8px; color:#80cbc4; text-decoration:none;">
+        <img src="${thumb}" alt="Thumbnail" width="80" height="45" style="border-radius:6px; flex-shrink:0;">
+        <span style="font-weight:600; overflow-wrap: anywhere;">${url}</span>
+      </a>`;
+  }
+
+  // Analyze image base64 with Face++ API
+  async function detectEmotion(base64) {
+    msg.textContent = "กำลังวิเคราะห์อารมณ์...";
+    moodResult.textContent = "";
+    linkContainer.innerHTML = "";
+
+    const data = new URLSearchParams();
+    data.append("api_key", apiKey);
+    data.append("api_secret", apiSecret);
+    data.append("image_base64", base64);
+    data.append("return_attributes", "emotion");
+
+    try {
+      const res = await fetch("https://api-us.faceplusplus.com/facepp/v3/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: data.toString()
+      });
+      const json = await res.json();
+
+      msg.textContent = "";
+
+      if (!json.faces || json.faces.length === 0) {
+        moodResult.textContent = "ไม่พบใบหน้าในภาพ";
+        return;
+      }
+      const emotions = json.faces[0].attributes.emotion;
+
+      // Map some emotions to basic moods
+      let topMood = Object.entries(emotions).sort((a,b) => b[1] - a[1])[0][0];
+      if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
+      if (topMood === "surprise") topMood = "happiness";
+
+      moodResult.textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
+
+      // Get YouTube link for detected mood
+      let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // fallback
+      if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
+      else if (topMood === "sadness") url = getRandomLink("sadnessLinks") || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
+      else if (topMood === "anger") url = getRandomLink("angerLinks") || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
+      else if (topMood === "neutral") url = getRandomLink("neutralLinks") || "https://www.youtube.com/watch?v=5qap5aO4i9A";
+
+      linkContainer.innerHTML = createTrackCard(url);
+    } catch (err) {
+      msg.textContent = "เกิดข้อผิดพลาดในการวิเคราะห์";
+      console.error(err);
+    }
+  }
+
+  // Take photo from video stream and get base64
+  function takePhoto() {
+    if (!stream) {
+      msg.textContent = "กล้องยังไม่พร้อม กรุณารอสักครู่";
       return;
     }
 
-    // find top emotion
-    const emotions = data.faces[0].attributes.emotion;
-    const pairs = Object.entries(emotions).sort((a,b)=>b[1]-a[1]);
-    let top = pairs[0][0]; // e.g., "happiness"
-    // map less-common emotions
-    if(top === 'surprise') top = 'happiness';
-    if(top === 'disgust' || top === 'fear') top = 'sadness';
+    // Set canvas size to video size
+    const track = stream.getVideoTracks()[0];
+    const settings = track.getSettings();
+    canvas.width = settings.width || video.videoWidth || 320;
+    canvas.height = settings.height || video.videoHeight || 240;
 
-    const conf = Math.round(pairs[0][1]);
-    applyMood(top, conf, emotions);
-    debugEl.textContent = 'Raw: ' + JSON.stringify(emotions);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  } catch (err){
-    if(err.name === 'AbortError'){
-      setStatus('การร้องขอถูกยกเลิก', 'var(--muted)');
-    } else {
-      console.error(err);
-      setStatus('เกิดข้อผิดพลาดในการวิเคราะห์', 'var(--danger)');
-      moodLabel.textContent = 'ข้อผิดพลาด';
-      moodBadge.textContent = '⚠️';
-      moodText.textContent = 'ไม่สามารถติดต่อบริการวิเคราะห์ได้';
-    }
-  } finally {
-    setBusy(false);
+    canvas.toBlob(blob => {
+      if (!blob) {
+        msg.textContent = "เกิดข้อผิดพลาดในการถ่ายภาพ";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result.split(',')[1];
+        detectEmotion(base64);
+      };
+      reader.readAsDataURL(blob);
+    }, "image/jpeg", 0.95);
   }
-}
 
-/* mood UI mapping */
-const MOODS = {
-  happiness:{ label:'มีความสุข', emoji:'😄', hint:'เพลงสนุก จังหวะเร็ว' },
-  sadness:{ label:'เศร้า', emoji:'😢', hint:'เพลงช้า สบายใจ' },
-  anger:{ label:'โกรธ', emoji:'😠', hint:'เพลงระบายหรือผ่อนคลาย' },
-  neutral:{ label:'ปกติ', emoji:'😐', hint:'เพลงบรรเลงหรือ lo-fi' }
-};
+  // Handle file upload and analyze
+  function handleUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-function applyMood(moodKey, confidence, emotions){
-  const mood = MOODS[moodKey] ? moodKey : 'neutral';
-  moodBadge.textContent = MOODS[mood].emoji;
-  moodLabel.textContent = `${MOODS[mood].label} (${confidence}%)`;
-  moodText.textContent = MOODS[mood].hint;
-  setStatus('วิเคราะห์เสร็จแล้ว — แสดงเพลงแนะนำ');
+    msg.textContent = "";
+    moodResult.textContent = "";
+    linkContainer.innerHTML = "";
 
-  // build tracks list
-  renderTracks(mood);
-  // animate logo to indicate ready
-  logoEl.classList.add('pulse');
-  setTimeout(()=> logoEl.classList.remove('pulse'), 10_000); // pulsing 10s max
-}
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1];
+      detectEmotion(base64);
+    };
+    reader.readAsDataURL(file);
+  }
 
-/* render tracks pulled from localStorage, fallback to defaults */
-function renderTracks(mood){
-  tracksEl.innerHTML = '';
-  const defaults = {
-    happiness:['https://www.youtube.com/watch?v=ekr2nIex040'],
-    sadness:['https://www.youtube.com/watch?v=Jkj36B1YuDU'],
-    anger:['https://www.youtube.com/watch?v=eTedtzozrAo'],
-    neutral:['https://www.youtube.com/watch?v=5qap5aO4i9A']
-  };
-
-  const key = {
-    happiness:'happinessLinks', sadness:'sadnessLinks', anger:'angerLinks', neutral:'neutralLinks'
-  }[mood];
-
-  const raw = (localStorage.getItem(key) || '').trim();
-  const arr = raw ? raw.split('\n').map(s=>s.trim()).filter(Boolean) : defaults[mood];
-
-  const items = arr.length ? arr.slice(0,6) : defaults[mood];
-
-  items.forEach((url, i) => {
-    const div = document.createElement('div'); div.className='track';
-    const u = document.createElement('div'); u.className='url';
-    u.textContent = url;
-    const b = document.createElement('button'); b.className='play';
-    b.textContent = '▶️ เปิดเพลง';
-    b.addEventListener('click', ()=> {
-      // on mobile open in new tab for best compatibility
-      window.open(url, '_blank', 'noopener');
+  // Load saved links from localStorage on start
+  ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = localStorage.getItem(id) || "";
+    el.addEventListener("input", () => {
+      localStorage.setItem(id, el.value);
     });
-    // first item gets gentle pulse on play button
-    if(i===0){
-      b.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 1200, iterations: 2 });
-    }
-    div.appendChild(u);
-    div.appendChild(b);
-    tracksEl.appendChild(div);
   });
-}
 
-/* event: snap */
-snapBtn.addEventListener('click', async ()=>{
-  try {
-    setStatus('จับภาพ...');
-    const b64 = captureFrame();
-    await analyzeEmotion(b64);
-  } catch(e){
-    console.error(e);
-    setStatus('ไม่สามารถจับภาพได้', 'var(--danger)');
-  }
-});
+  // Start camera immediately on page load
+  window.addEventListener("load", startCamera);
 
-/* Drag & drop support for mobile/desktop */
-window.addEventListener('dragover', e => e.preventDefault());
-window.addEventListener('drop', e => {
-  e.preventDefault();
-  const f = e.dataTransfer.files && e.dataTransfer.files[0];
-  if(f && f.type && f.type.startsWith('image/')){
-    readFileAsBase64(f).then(b64 => analyzeEmotion(b64));
-  }
-});
+  takePhotoBtn.addEventListener("click", takePhoto);
+  uploadInput.addEventListener("change", handleUpload);
+</script>
 
-/* Accessibility: close sheet on outside tap/backdrop */
-document.addEventListener('click', (e)=>{
-  if(sheet.classList.contains('open')){
-    const within = e.composedPath().includes(sheet) || e.target === openSheet;
-    if(!within && !e.target.closest('.sheet')) closeSettings();
-  }
-});
-
-/* Ensure textareas exist on page (in case of different IDs) */
-(function ensureTextareas(){
-  ids.forEach(id => {
-    if(!document.getElementById(id)){
-      const ta = document.createElement('tex
+</body>
+</html>
