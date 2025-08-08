@@ -1,323 +1,588 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AI Mood DJ 🎶</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI Mood DJ — Dark UI</title>
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-    background-size: 300% 300%;
-    animation: gradientBG 8s ease infinite;
-    padding: 20px;
-    text-align: center;
-    color: #333;
-    transition: background 0.3s, color 0.3s;
+  :root{
+    --bg-1:#091226;
+    --bg-2:#0f1b2b;
+    --card:#0f2433;
+    --muted:#9fb3c8;
+    --accent:#6ee7b7; /* pleasant green */
+    --accent-2:#5aa9ff; /* blue */
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.03);
+    --danger: #ff7a7a;
+    --glass-border: rgba(255,255,255,0.06);
+    --glass-glow: 0 10px 30px rgba(80,170,255,0.06);
   }
 
-  @keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* page */
+  html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
+                radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
+                linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    color:#d8eef7;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    gap:18px;
   }
 
-  .container {
-    max-width: 420px;
-    margin: auto;
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(15px);
-    padding: 25px;
-    border-radius: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    position: relative;
-    animation: fadeIn 0.7s ease;
+  /* layout card */
+  .app {
+    width:100%;
+    max-width:980px;
+    display:grid;
+    grid-template-columns: 420px 1fr;
+    gap:20px;
+    align-items:start;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* left column - controller */
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-glow);
+    border-radius:16px;
+    padding:18px;
+    position:relative;
+    overflow:hidden;
   }
 
-  .settings, .darkmode-toggle {
-    position: absolute;
-    top: 12px;
-    cursor: pointer;
-    transition: transform 0.3s, filter 0.3s;
+  header.brand {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:8px;
   }
-  .settings { right: 45px; width: 26px; }
-  .darkmode-toggle { right: 10px; font-size: 22px; }
+  .logo {
+    width:56px;height:56px;border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: 0 6px 18px rgba(90,170,255,0.12);
+    font-weight:700;color:#02121a;font-size:18px;
+  }
+  .brand h1{margin:0;font-size:18px;letter-spacing:-0.2px}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
 
-  .settings:hover, .darkmode-toggle:hover {
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 6px rgba(0,0,0,0.2));
-  }
-
-  /* Smooth sliding settings panel */
-  .settings-panel {
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: max-height 0.4s ease, opacity 0.4s ease, transform 0.4s ease, padding 0.3s ease;
-    position: absolute;
-    top: 45px;
-    right: 10px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 0 12px;
-    text-align: left;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    width: 280px;
-  }
-  .settings-panel.show {
-    max-height: 500px;
-    opacity: 1;
-    transform: translateY(0);
-    padding: 12px;
+  /* tutorial */
+  .howto{
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+    border-radius:12px;padding:12px;margin:14px 0;color:var(--muted);
+    font-size:13px; line-height:1.5;
+    border:1px solid rgba(255,255,255,0.02);
   }
 
-  .settings-panel textarea {
-    width: 100%;
-    height: 60px;
-    margin-bottom: 10px;
-    padding: 8px;
-    border: none;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.9);
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+  /* camera preview */
+  .camera-wrap{
+    margin-top:10px;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.03);
+    background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.25));
+  }
+  video#video{
+    display:block; width:100%; height:240px; object-fit:cover;
+    filter: saturate(1.02) contrast(1.02);
   }
 
-  .tutorial {
-    text-align: left;
-    background: rgba(227,242,253,0.9);
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 15px;
-    font-size: 14px;
-    line-height: 1.6;
+  /* controls */
+  .controls{
+    display:flex;gap:8px;margin-top:12px;
+    align-items:center;flex-wrap:wrap;
   }
 
-  video {
-    width: 100%;
-    border-radius: 12px;
-    margin-top: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  .btn {
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--accent-2);
+    padding:10px 14px;border-radius:12px;
+    cursor:pointer;font-weight:600;font-size:14px;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .12s;
+  }
+  .btn:hover{ transform:translateY(-3px); box-shadow:0 8px 30px rgba(0,0,0,0.45); }
+  .btn.prim { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#012; box-shadow:0 10px 30px rgba(90,170,255,0.12); }
+  .btn.ghost { color:var(--muted); background:transparent; border:1px dashed rgba(255,255,255,0.03); }
+
+  input[type=file]{ display:none; }
+
+  .status {
+    margin-top:10px;font-size:14px;color:var(--muted);
+    min-height:22px;
   }
 
-  input[type="file"] {
-    margin-top: 12px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  /* right column - results */
+  .stage {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid var(--glass-border);
+    border-radius:16px;padding:18px; position:relative;
+  }
+  .mood-card{
+    display:flex;align-items:center;gap:16px;
+  }
+  .mood-emoji{
+    width:84px;height:84px;border-radius:14px;
+    background:linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    display:flex;align-items:center;justify-content:center;
+    font-size:40px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .mood-info h2{ margin:0;font-size:20px }
+  .mood-info p{ margin:6px 0 0 0;color:var(--muted) }
+
+  /* suggested tracks list */
+  .tracks { margin-top:16px; display:grid; gap:10px; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); }
+  .track {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.03);
+    padding:10px;border-radius:10px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .track .title{ font-weight:700;font-size:13px;color:#e9fbff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .track .sub{ font-size:12px;color:var(--muted) }
+
+  .play-btn {
+    margin-top:auto;
+    border-radius:10px;padding:8px 10px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#012;font-weight:700;border:none;cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .play-btn:active{ transform:scale(.99); }
+
+  /* flashy action when ready */
+  .pulse {
+    animation: pulseGlow 1.6s infinite;
+    box-shadow: 0 10px 40px rgba(90,170,255,0.18), 0 0 40px rgba(90,170,255,0.08) inset;
+  }
+  @keyframes pulseGlow{
+    0% { transform: translateY(0) scale(1); box-shadow: 0 6px 20px rgba(90,170,255,0.12); }
+    50%{ transform: translateY(-4px) scale(1.02); box-shadow: 0 18px 40px rgba(90,170,255,0.22); }
+    100%{ transform: translateY(0) scale(1); box-shadow: 0 6px 20px rgba(90,170,255,0.12); }
   }
 
-  button {
-    margin-top: 12px;
-    padding: 12px 20px;
-    font-weight: bold;
-    background: linear-gradient(135deg, #42a5f5, #1e88e5);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+  /* settings slide-in panel (from right) */
+  .settings-drawer {
+    position:fixed; right:20px; top:20px; width:360px; max-width:92vw;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    border-radius:14px; padding:14px; box-shadow: 0 10px 60px rgba(0,0,0,0.6);
+    transform: translateX(420px); opacity:0; transition: transform .36s cubic-bezier(.2,.9,.2,1), opacity .28s;
+    z-index:40;
   }
-  button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(66,165,245,0.5);
-  }
+  .settings-drawer.open { transform: translateX(0); opacity:1; }
 
-  a {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 18px;
-    background: #4caf50;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  a:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(76,175,80,0.5);
-  }
+  .drawer-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .drawer-head h3 { margin:0;font-size:16px; }
+  textarea { width:100%; min-height:64px; resize:vertical; padding:10px; border-radius:8px; background: rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.03); color:#dff7ff; }
 
-  /* Dark Mode */
-  body.dark {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #ddd;
-  }
-  body.dark .container {
-    background: rgba(30,30,30,0.8);
-  }
-  body.dark .settings-panel {
-    background: rgba(44,44,44,0.95);
-    color: #ddd;
-  }
-  body.dark .tutorial {
-    background: rgba(38,50,56,0.8);
-    color: #ddd;
+  label.small { font-size:12px;color:var(--muted); display:block; margin-bottom:6px; }
+
+  .drawer-actions{ display:flex; gap:8px; margin-top:10px; justify-content:flex-end;}
+  .btn.save { background: linear-gradient(90deg,#46e6b0,#5aa9ff); color:#012; font-weight:800; }
+
+  /* footer small */
+  .foot { margin-top:12px; color:var(--muted); font-size:13px; text-align:center; }
+
+  /* small responsive */
+  @media (max-width:880px){
+    .app{ grid-template-columns: 1fr; max-width:720px; }
+    .camera-wrap video{ height:220px; }
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>AI Mood DJ 🎧</h1>
-    <div class="tutorial">
-      <h3>📋 วิธีใช้งาน:</h3>
-      <ol>
-        <li>🛠️ คลิกปุ่มรูปเฟือง → วางลิงก์ YouTube สำหรับแต่ละอารมณ์ (ใส่ทีละบรรทัด)</li>
-        <li>📷 ถ่ายภาพผ่านกล้อง หรือ 📤 อัปโหลดภาพจากเครื่องของคุณ</li>
-        <li>🤖 AI จะตรวจจับอารมณ์ของคุณและเปิดเพลงที่เหมาะสมแบบสุ่ม</li>
-      </ol>
-    </div>
+  <div class="app" role="application" aria-label="AI Mood DJ — Dark UI">
+    <!-- LEFT: controller -->
+    <section class="panel" aria-label="Controls panel">
+      <div class="brand header">
+        <div class="logo">DJ</div>
+        <div class="brand">
+          <h1>AI Mood DJ</h1>
+          <p>มิวสิคตามอารมณ์ — ตรวจจับจากรูป/กล้อง</p>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <button id="openSettings" class="btn" title="Settings">⚙️ ตั้งค่า</button>
+          <button id="infoReset" class="btn ghost" title="Reset saved lists">♻️ รีเซ็ต</button>
+        </div>
+      </div>
 
-    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" class="settings" onclick="toggleSettings()" title="Settings" alt="Settings">
-    <div class="darkmode-toggle" id="darkmodeToggle" title="Toggle Dark Mode">🌙</div>
+      <div class="howto" role="note">
+        <strong>วิธีใช้ (ย่อ):</strong>
+        <ol style="padding-left:18px;margin:8px 0 0 0;">
+          <li>กด <em>ตั้งค่า</em> เพื่อวางลิงก์ YouTube แยกตามอารมณ์ (ทีละบรรทัด)</li>
+          <li>อนุญาตกล้องหรืออัปโหลดรูป → กดถ่ายภาพ</li>
+          <li>AI จะวิเคราะห์และแสดงปุ่มเปิดเพลงที่เหมาะสม</li>
+        </ol>
+      </div>
 
-    <div class="settings-panel" id="settingsPanel">
-      <label>🎵 เพลงสำหรับอารมณ์สุข:</label>
-      <textarea id="happinessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
-      <label>🎵 เพลงสำหรับอารมณ์เศร้า:</label>
-      <textarea id="sadnessLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
-      <label>🎵 เพลงสำหรับอารมณ์โกรธ:</label>
-      <textarea id="angerLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
-      <label>🎵 เพลงสำหรับอารมณ์ปกติ (กลางๆ):</label>
-      <textarea id="neutralLinks" placeholder="ใส่ลิงก์ YouTube ทีละบรรทัด..."></textarea>
-    </div>
+      <div class="camera-wrap" aria-hidden="false">
+        <video id="video" autoplay muted playsinline aria-label="Camera preview"></video>
+      </div>
 
-    <video id="video" autoplay muted playsinline></video>
-    <input type="file" accept="image/*" id="uploadInput" onchange="handleUpload(event)">
-    <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
-    <button onclick="takePhoto()">📸 ถ่ายภาพ</button>
-    <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
-    <p id="moodResult">อารมณ์ของคุณจะแสดงที่นี่...</p>
-    <div id="linkContainer"></div>
+      <div class="controls">
+        <label for="uploadFile" class="btn" title="Upload image">📤 อัปโหลดรูป</label>
+        <input id="uploadFile" type="file" accept="image/*">
+        <button id="snap" class="btn prim">📸 ถ่ายภาพ</button>
+        <button id="demoFace" class="btn">👁️ ทดสอบตัวอย่าง</button>
+      </div>
+
+      <div class="status" id="statusArea">พร้อมใช้งาน — รอการตรวจจับ</div>
+
+      <div class="foot">ข้อมูลจะถูกเก็บไว้ในเบราว์เซอร์ของคุณ (localStorage)</div>
+    </section>
+
+    <!-- RIGHT: mood stage -->
+    <section class="stage" aria-label="Mood & tracks">
+      <div class="mood-card" id="moodCard">
+        <div class="mood-emoji" id="moodEmoji">🙂</div>
+        <div class="mood-info">
+          <h2 id="moodTitle">ยังไม่ได้วิเคราะห์</h2>
+          <p id="moodDesc">อัปโหลดหรือถ่ายรูปเพื่อให้ AI ตรวจจับอารมณ์ของคุณ</p>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+        <h3 style="margin:0;">เพลงที่แนะนำ</h3>
+        <div style="color:var(--muted); font-size:13px;" id="detectedConfidence"></div>
+      </div>
+
+      <div class="tracks" id="tracksGrid" aria-live="polite" style="margin-top:10px;">
+        <!-- generated track cards -->
+      </div>
+
+      <div id="rawDebug" style="margin-top:14px;color:var(--muted);font-size:12px;"></div>
+    </section>
   </div>
 
-  <script>
-    const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
-    const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
+  <!-- Settings drawer -->
+  <aside class="settings-drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="Music settings">
+    <div class="drawer-head">
+      <h3>ตั้งค่าเพลงตามอารมณ์</h3>
+      <button id="closeDrawer" class="btn ghost" title="Close">✖️</button>
+    </div>
 
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+    <div>
+      <label class="small">เพลง — อารมณ์สุข (happiness)</label>
+      <textarea id="happinessLinks" placeholder="วางลิงก์ YouTube ทีละบรรทัด..."></textarea>
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-      .then(stream => { video.srcObject = stream; })
-      .catch(err => {
-        alert("กรุณาอนุญาตให้เข้าถึงกล้อง และใช้ Chrome หรือ Safari");
-        console.error("Camera error:", err);
-      });
+      <label class="small" style="margin-top:8px;">เพลง — อารมณ์เศร้า (sadness)</label>
+      <textarea id="sadnessLinks"></textarea>
 
-    function toggleSettings() {
-      document.getElementById("settingsPanel").classList.toggle("show");
+      <label class="small" style="margin-top:8px;">เพลง — โกรธ (anger)</label>
+      <textarea id="angerLinks"></textarea>
+
+      <label class="small" style="margin-top:8px;">เพลง — ปกติ / กลาง (neutral)</label>
+      <textarea id="neutralLinks"></textarea>
+
+      <div class="drawer-actions">
+        <button id="saveSettings" class="btn save">💾 บันทึก</button>
+        <button id="closeSave" class="btn ghost">ยกเลิก</button>
+      </div>
+    </div>
+  </aside>
+
+<script>
+/* -------------------------
+   Configuration (keep if provided)
+   ------------------------- */
+const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
+const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
+
+/* DOM */
+const video = document.getElementById('video');
+const snapBtn = document.getElementById('snap');
+const uploadFile = document.getElementById('uploadFile');
+const statusArea = document.getElementById('statusArea');
+const moodTitle = document.getElementById('moodTitle');
+const moodDesc = document.getElementById('moodDesc');
+const moodEmoji = document.getElementById('moodEmoji');
+const tracksGrid = document.getElementById('tracksGrid');
+const detectedConfidence = document.getElementById('detectedConfidence');
+const rawDebug = document.getElementById('rawDebug');
+
+const drawer = document.getElementById('drawer');
+const openSettings = document.getElementById('openSettings');
+const closeDrawer = document.getElementById('closeDrawer');
+const saveSettings = document.getElementById('saveSettings');
+const closeSave = document.getElementById('closeSave');
+const infoReset = document.getElementById('infoReset');
+
+/* textareas */
+const ids = ['happinessLinks','sadnessLinks','angerLinks','neutralLinks'];
+
+/* initialize media */
+async function startCamera(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio:false });
+    video.srcObject = stream;
+    statusArea.textContent = "กล้องพร้อมใช้งาน — คุณสามารถถ่ายภาพได้";
+  }catch(err){
+    console.warn(err);
+    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้ — กรุณาอนุญาตกล้องหรืออัปโหลดรูปแทน";
+  }
+}
+startCamera();
+
+/* drawer control */
+openSettings.addEventListener('click', ()=> {
+  drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false');
+});
+closeDrawer.addEventListener('click', ()=> {
+  drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true');
+});
+closeSave.addEventListener('click', ()=> { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); });
+
+/* load saved lists */
+function loadSaved(){
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el.value = localStorage.getItem(id) || "";
+  });
+}
+loadSaved();
+
+saveSettings.addEventListener('click', ()=> {
+  ids.forEach(id => {
+    const val = document.getElementById(id).value || "";
+    localStorage.setItem(id, val);
+  });
+  statusArea.textContent = "บันทึกรายการเพลงเรียบร้อย";
+  drawer.classList.remove('open');
+});
+
+/* reset handler */
+infoReset.addEventListener('click', ()=> {
+  if(!confirm("ลบรายการเพลงที่บันทึกไว้ทั้งหมดจากเบราว์เซอร์หรือไม่?")) return;
+  ids.forEach(id => localStorage.removeItem(id));
+  loadSaved();
+  statusArea.textContent = "รายการเพลงถูกรีเซ็ตแล้ว";
+});
+
+/* helper: pick random link from textarea */
+function getRandomFromTextarea(id){
+  const raw = (document.getElementById(id).value || "").trim();
+  if(!raw) return null;
+  const lines = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(lines.length===0) return null;
+  return lines[Math.floor(Math.random()*lines.length)];
+}
+
+/* capture helpers */
+const canvas = document.createElement('canvas');
+canvas.width = 640; canvas.height = 480;
+const ctx = canvas.getContext('2d');
+
+function showStatus(t){ statusArea.textContent = t; }
+
+/* main photo: from camera */
+snapBtn.addEventListener('click',()=>{
+  showStatus('กำลังจับภาพจากกล้อง...');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(blob=> {
+    const reader = new FileReader();
+    reader.onloadend = ()=> {
+      const b64 = reader.result.split(',')[1];
+      analyzeEmotion(b64);
+    };
+    reader.readAsDataURL(blob);
+  }, 'image/jpeg', 0.9);
+});
+
+/* file upload */
+uploadFile.addEventListener('change', (ev)=>{
+  const f = ev.target.files[0];
+  if(!f) return;
+  showStatus('โหลดไฟล์ และเตรียมวิเคราะห์...');
+  const r = new FileReader();
+  r.onloadend = ()=> {
+    const b64 = r.result.split(',')[1];
+    analyzeEmotion(b64);
+  };
+  r.readAsDataURL(f);
+});
+
+/* demo button (optional sample image) */
+document.getElementById('demoFace').addEventListener('click', ()=> {
+  // small sample face image (data URL omitted); instead show message
+  showStatus('ตัวอย่างยังไม่เชื่อมต่อ — โปรดอัปโหลดรูปหรือต่อกล้อง');
+});
+
+/* emotion mapping and emoji */
+const MOOD_MAP = {
+  happiness: {label: 'มีความสุข', emoji:'😄', desc:'ลองฟังเพลงสดใสและจังหวะสนุกๆ' },
+  sadness:   {label: 'เศร้า',   emoji:'😢', desc:'เพลงเนิบช้า สบายใจ หรือต่อความหวัง' },
+  anger:     {label: 'โกรธ',    emoji:'😠', desc:'เพลงระบายอารมณ์ หรือผ่อนคลาย' },
+  neutral:   {label: 'ปกติ',   emoji:'😐', desc:'เพลงเบา ๆ หรือ lo-fi' }
+};
+
+/* analyze via Face++ */
+async function analyzeEmotion(imageBase64){
+  showStatus('กำลังวิเคราะห์อารมณ์...');
+  moodTitle.textContent = 'กำลังประมวลผล...';
+  moodDesc.textContent = '';
+  tracksGrid.innerHTML = '';
+  detectedConfidence.textContent = '';
+
+  const params = new URLSearchParams();
+  params.append('api_key', apiKey);
+  params.append('api_secret', apiSecret);
+  params.append('image_base64', imageBase64);
+  params.append('return_attributes', 'emotion');
+
+  try{
+    const res = await fetch('https://api-us.faceplusplus.com/facepp/v3/detect', {
+      method:'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: params.toString()
+    });
+    const data = await res.json();
+
+    if(!data || !data.faces || data.faces.length === 0){
+      showStatus('ไม่พบใบหน้าในภาพ');
+      moodTitle.textContent = 'ไม่พบใบหน้า';
+      moodEmoji.textContent = '❓';
+      moodDesc.textContent = 'โปรดลองถ่ายภาพใหม่หรืออัปโหลดภาพที่เห็นใบหน้าอย่างชัดเจน';
+      return;
     }
 
-    function getRandomLink(textareaId) {
-      const raw = document.getElementById(textareaId).value.trim();
-      if (!raw) return null;
-      const links = raw.split("\n").map(s => s.trim()).filter(s => s);
-      return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
-    }
+    // pick top emotion
+    const emotions = data.faces[0].attributes.emotion;
+    const sorted = Object.entries(emotions).sort((a,b)=>b[1]-a[1]);
+    let top = sorted[0][0]; // e.g., "happiness"
 
-    function takePhoto() {
-      document.getElementById("loading").style.display = "block";
-      document.getElementById("moodResult").textContent = "";
-      document.getElementById("linkContainer").innerHTML = "";
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result.split(',')[1];
-          detectEmotion(base64);
-        };
-        reader.readAsDataURL(blob);
-      }, "image/jpeg");
-    }
+    // map some Face++ emotions into our categories
+    if(top === 'surprise') top = 'happiness';
+    if(top === 'disgust' || top === 'fear') top = 'sadness';
 
-    function handleUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      document.getElementById("loading").style.display = "block";
-      document.getElementById("moodResult").textContent = "";
-      document.getElementById("linkContainer").innerHTML = "";
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result.split(',')[1];
-        detectEmotion(base64);
-      };
-      reader.readAsDataURL(file);
-    }
+    // set UI
+    const conf = Math.round(sorted[0][1]);
+    const mood = MOOD_MAP[top] ? top : 'neutral';
+    moodTitle.textContent = MOOD_MAP[mood].label;
+    moodEmoji.textContent = MOOD_MAP[mood].emoji;
+    moodDesc.textContent = MOOD_MAP[mood].desc;
+    detectedConfidence.textContent = `ความมั่นใจ: ${conf}%`;
 
-    function detectEmotion(base64) {
-      const data = new URLSearchParams();
-      data.append("api_key", apiKey);
-      data.append("api_secret", apiSecret);
-      data.append("image_base64", base64);
-      data.append("return_attributes", "emotion");
+    showStatus('วิเคราะห์เสร็จแล้ว — กำลังแสดงเพลงแนะนำ');
+    renderTracksForMood(mood, emotions);
 
-      fetch("https://api-us.faceplusplus.com/facepp/v3/detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: data.toString()
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("loading").style.display = "none";
-        const emotions = data?.faces?.[0]?.attributes?.emotion;
-        if (!emotions) {
-          document.getElementById("moodResult").textContent = "ไม่พบใบหน้า";
-          return;
-        }
-        let topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
-        if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
-        if (topMood === "surprise") topMood = "happiness";
-        document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
-        let url = "https://www.youtube.com/watch?v=ekr2nIex040";
-        if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
-        if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU";
-        if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo";
-        if (topMood === "neutral")  url = getRandomLink("neutralLinks")  || "https://www.youtube.com/watch?v=5qap5aO4i9A";
-        document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
-      })
-      .catch(err => {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("moodResult").textContent = "เกิดข้อผิดพลาดในการวิเคราะห์";
-        console.error(err);
-      });
-    }
+    // debug blob
+    rawDebug.textContent = `Raw emotions: ${JSON.stringify(emotions)}`;
 
-    const textareas = ['happinessLinks', 'sadnessLinks', 'angerLinks', 'neutralLinks'];
-    textareas.forEach(id => {
-      const el = document.getElementById(id);
-      el.value = localStorage.getItem(id) || '';
-      el.addEventListener('input', () => {
-        localStorage.setItem(id, el.value);
-      });
+  }catch(err){
+    console.error(err);
+    showStatus('เกิดข้อผิดพลาดในการเรียก API');
+    moodTitle.textContent = 'ข้อผิดพลาด';
+    moodEmoji.textContent = '⚠️';
+    moodDesc.textContent = 'ไม่สามารถติดต่อบริการวิเคราะห์ได้';
+  }
+}
+
+/* create track list UI */
+function renderTracksForMood(mood, emotions){
+  tracksGrid.innerHTML = '';
+  const fallback = {
+    happiness: ['https://www.youtube.com/watch?v=ekr2nIex040'],
+    sadness: ['https://www.youtube.com/watch?v=Jkj36B1YuDU'],
+    anger: ['https://www.youtube.com/watch?v=eTedtzozrAo'],
+    neutral: ['https://www.youtube.com/watch?v=5qap5aO4i9A']
+  };
+  // first try to get from saved lists
+  const saved = (localStorage.getItem(mood+'Links') || localStorage.getItem({
+    happiness:'happinessLinks', sadness:'sadnessLinks', anger:'angerLinks', neutral:'neutralLinks'
+  }[mood]) ) || '';
+
+  // read either textarea id form or earlier naming compatibility
+  const listFromStore = (document.getElementById(mood+'Links') && document.getElementById(mood+'Links').value) ||
+                        (document.getElementById(mood==='happiness' ? 'happinessLinks' : mood+'Links') && document.getElementById(mood+'Links').value) ||
+                        saved;
+
+  let arr;
+  if(listFromStore && listFromStore.trim()){
+    arr = listFromStore.split('\n').map(s=>s.trim()).filter(Boolean);
+  } else {
+    arr = fallback[mood] || [fallback['neutral'][0]];
+  }
+
+  // create up to 6 items (or dup if only 1)
+  const items = [];
+  for(let i=0;i<Math.min(6, Math.max(1, arr.length)); i++){
+    items.push(arr[i % arr.length]);
+  }
+
+  items.forEach((url, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'track';
+    const t = document.createElement('div'); t.className='title';
+    t.textContent = (new URL(url)).searchParams.get('v') ? `YouTube • ${ (new URL(url)).searchParams.get('v') }` : url;
+    const s = document.createElement('div'); s.className='sub';
+    s.textContent = url;
+    const btn = document.createElement('button');
+    btn.className = 'play-btn';
+    btn.textContent = '▶️ เปิดเพลง';
+    btn.addEventListener('click', ()=> {
+      window.open(url, '_blank', 'noopener');
     });
 
-    const darkToggle = document.getElementById('darkmodeToggle');
-    function setDarkMode(on) {
-      if(on) {
-        document.body.classList.add('dark');
-        darkToggle.textContent = '☀️';
-        localStorage.setItem('darkMode', 'true');
-      } else {
-        document.body.classList.remove('dark');
-        darkToggle.textContent = '🌙';
-        localStorage.setItem('darkMode', 'false');
-      }
+    card.appendChild(t);
+    card.appendChild(s);
+    card.appendChild(btn);
+
+    // animate the first card to pulse (call-to-action)
+    if(idx===0){
+      btn.classList.add('pulse');
+      // small extra: add tooltip like step
+      setTimeout(()=>btn.classList.remove('pulse'), 10000); // pulse for 10s max
     }
-    const darkModeStored = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(darkModeStored);
-    darkToggle.addEventListener('click', () => {
-      const isDark = document.body.classList.contains('dark');
-      setDarkMode(!isDark);
-    });
-  </script>
+
+    tracksGrid.appendChild(card);
+  });
+}
+
+/* accessibility: allow drop of images */
+window.addEventListener('dragover', e=> e.preventDefault());
+window.addEventListener('drop', e=>{
+  e.preventDefault();
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f && f.type && f.type.startsWith('image/')){
+    const r = new FileReader();
+    r.onloadend = ()=> {
+      const b64 = r.result.split(',')[1];
+      analyzeEmotion(b64);
+    };
+    r.readAsDataURL(f);
+  }else{
+    // nothing
+  }
+});
+
+/* On load, ensure textareas exist (for compatibility) */
+(function ensureTextareas(){
+  ids.forEach(id=>{
+    if(!document.getElementById(id)){
+      // copy values from storage into a hidden element (not necessary, but keep compatibility)
+      const ta = document.createElement('textarea');
+      ta.id = id;
+      ta.style.display = 'none';
+      document.body.appendChild(ta);
+      ta.value = localStorage.getItem(id) || '';
+    }
+  });
+})();
+
+/* small polyfill: if page loaded and camera not allowed, still allow upload */
+showStatus('โหลดอินเทอร์เฟซเรียบร้อย — โปรดอนุญาตกล้องหรืออัปโหลดรูป');
+
+/* end of script */
+</script>
 </body>
 </html>
