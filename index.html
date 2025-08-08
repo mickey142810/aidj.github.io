@@ -1,81 +1,159 @@
+Got it — I’ll give you the full, finished HTML, CSS, and JavaScript code for your AI Mood DJ web app, mobile-optimized, with the robot 🤖 logo replacing the SVG.
+
+Here’s the complete version:
+
 <!doctype html>
 <html lang="th">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>AI Mood DJ — Mobile Friendly</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>AI Mood DJ</title>
 <style>
   :root {
     --bg: #081018;
     --card: #0f1720;
     --muted: #9fb3c8;
-    --accent1: #6ee7b7;
-    --accent2: #5aa9ff;
+    --accent1: #5ad0ff;
+    --accent2: #6ee7b7;
   }
 
   body {
     background-color: var(--bg);
     color: white;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', sans-serif;
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     min-height: 100vh;
   }
 
-  .card {
-    background-color: var(--card);
-    border-radius: 1.5rem;
-    padding: 1.5rem;
-    max-width: 90%;
-    width: 400px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
   }
 
   .logo {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent1), var(--accent2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    margin: 0 auto 1rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   h1 {
     font-size: 1.8rem;
-    margin-bottom: 0.5rem;
+    margin: 0;
   }
 
-  p {
+  main {
+    background-color: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
     color: var(--muted);
-    font-size: 1rem;
-    line-height: 1.4;
+    font-size: 0.9rem;
   }
 
-  @media (max-width: 500px) {
-    h1 {
-      font-size: 1.5rem;
-    }
-    .logo {
-      width: 90px;
-      height: 90px;
-      font-size: 2.5rem;
-    }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+  }
+
+  button {
+    background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 1rem;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  button:hover {
+    opacity: 0.9;
+  }
+
+  .result {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: var(--accent1);
+  }
+
+  footer {
+    margin-top: auto;
+    padding: 15px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
   }
 </style>
 </head>
 <body>
-  <div class="card">
+  <header>
     <div class="logo">🤖</div>
     <h1>AI Mood DJ</h1>
-    <p>Let AI match your tunes to your mood — anywhere, anytime.</p>
-  </div>
+  </header>
+
+  <main>
+    <label for="mood">คุณรู้สึกอย่างไรตอนนี้?</label>
+    <select id="mood">
+      <option value="happy">😊 มีความสุข</option>
+      <option value="sad">😢 เศร้า</option>
+      <option value="energetic">⚡ กระปรี้กระเปร่า</option>
+      <option value="relaxed">🌙 ผ่อนคลาย</option>
+    </select>
+
+    <button onclick="generatePlaylist()">สร้างเพลย์ลิสต์</button>
+
+    <div class="result" id="result"></div>
+  </main>
+
+  <footer>
+    © 2025 AI Mood DJ — สร้างโดย ChatGPT
+  </footer>
+
+  <script>
+    function generatePlaylist() {
+      const mood = document.getElementById('mood').value;
+      let playlist = '';
+
+      switch (mood) {
+        case 'happy':
+          playlist = 'เพลงแดนซ์สนุกๆ และเพลงป๊อปสดใส 🎶';
+          break;
+        case 'sad':
+          playlist = 'เพลงช้า ๆ และบัลลาดปลอบใจ 💙';
+          break;
+        case 'energetic':
+          playlist = 'เพลงร็อคและ EDM เร้าใจ 🔥';
+          break;
+        case 'relaxed':
+          playlist = 'เพลง Lo-fi และ Jazz เบา ๆ 🌌';
+          break;
+      }
+
+      document.getElementById('result').textContent = playlist;
+    }
+  </script>
 </body>
 </html>
