@@ -1,141 +1,167 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Mood DJ 🎶</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: linear-gradient(to right, #e0f7fa, #ffffff);
-      padding: 20px;
-      text-align: center;
-      color: #333;
-      transition: background 0.3s, color 0.3s;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      position: relative;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .settings {
-      position: absolute;
-      top: 10px;
-      right: 40px;
-      cursor: pointer;
-      width: 24px;
-      height: 24px;
-    }
-    .darkmode-toggle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 20px;
-      user-select: none;
-    }
-    .settings-panel {
-      display: none;
-      position: absolute;
-      top: 40px;
-      right: 10px;
-      background: #f0f0f0;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: left;
-      z-index: 10;
-      transition: background 0.3s, color 0.3s;
-    }
-    .settings-panel textarea {
-      width: 100%;
-      height: 60px;
-      margin-bottom: 10px;
-      resize: vertical;
-      background: white;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      transition: background 0.3s, color 0.3s;
-    }
-    video {
-      width: 100%;
-      border-radius: 10px;
-    }
-    input[type="file"] {
-      margin-top: 10px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-weight: bold;
-      background-color: #1e88e5;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #1565c0;
-    }
-    a {
-      display: block;
-      margin-top: 15px;
-      color: green;
-      font-weight: bold;
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    .tutorial {
-      text-align: left;
-      background: #e3f2fd;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-      transition: background 0.3s, color 0.3s;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Mood DJ 🎶</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+    background-size: 300% 300%;
+    animation: gradientBG 8s ease infinite;
+    padding: 20px;
+    text-align: center;
+    color: #333;
+    transition: background 0.3s, color 0.3s;
+  }
 
-    /* Dark Mode Styles */
-    body.dark {
-      background: #121212;
-      color: #ddd;
-    }
-    body.dark .container {
-      background: #1e1e1e;
-      box-shadow: 0 0 15px rgba(255,255,255,0.1);
-    }
-    body.dark .settings-panel {
-      background: #2c2c2c;
-      border-color: #555;
-      color: #ddd;
-    }
-    body.dark .settings-panel textarea {
-      background: #333;
-      color: #ddd;
-      border-color: #555;
-    }
-    body.dark button {
-      background-color: #42a5f5;
-      color: #121212;
-    }
-    body.dark button:hover {
-      background-color: #1e88e5;
-      color: white;
-    }
-    body.dark a {
-      color: #80cbc4;
-    }
-    body.dark .tutorial {
-      background: #263238;
-      color: #ddd;
-    }
-  </style>
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .container {
+    max-width: 420px;
+    margin: auto;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(15px);
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    position: relative;
+    animation: fadeIn 0.7s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .settings, .darkmode-toggle {
+    position: absolute;
+    top: 12px;
+    cursor: pointer;
+    transition: transform 0.3s, filter 0.3s;
+  }
+  .settings { right: 45px; width: 26px; }
+  .darkmode-toggle { right: 10px; font-size: 22px; }
+
+  .settings:hover, .darkmode-toggle:hover {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 6px rgba(0,0,0,0.2));
+  }
+
+  /* Smooth sliding settings panel */
+  .settings-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: max-height 0.4s ease, opacity 0.4s ease, transform 0.4s ease, padding 0.3s ease;
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 0 12px;
+    text-align: left;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    width: 280px;
+  }
+  .settings-panel.show {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 12px;
+  }
+
+  .settings-panel textarea {
+    width: 100%;
+    height: 60px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.9);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+  }
+
+  .tutorial {
+    text-align: left;
+    background: rgba(227,242,253,0.9);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  video {
+    width: 100%;
+    border-radius: 12px;
+    margin-top: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  input[type="file"] {
+    margin-top: 12px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  button {
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #42a5f5, #1e88e5);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(66,165,245,0.5);
+  }
+
+  a {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 18px;
+    background: #4caf50;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  a:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(76,175,80,0.5);
+  }
+
+  /* Dark Mode */
+  body.dark {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #ddd;
+  }
+  body.dark .container {
+    background: rgba(30,30,30,0.8);
+  }
+  body.dark .settings-panel {
+    background: rgba(44,44,44,0.95);
+    color: #ddd;
+  }
+  body.dark .tutorial {
+    background: rgba(38,50,56,0.8);
+    color: #ddd;
+  }
+</style>
 </head>
 <body>
   <div class="container">
@@ -188,8 +214,7 @@
       });
 
     function toggleSettings() {
-      const panel = document.getElementById("settingsPanel");
-      panel.style.display = panel.style.display === "block" ? "none" : "block";
+      document.getElementById("settingsPanel").classList.toggle("show");
     }
 
     function getRandomLink(textareaId) {
@@ -217,11 +242,9 @@
     function handleUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       document.getElementById("loading").style.display = "block";
       document.getElementById("moodResult").textContent = "";
       document.getElementById("linkContainer").innerHTML = "";
-
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result.split(',')[1];
@@ -250,19 +273,15 @@
           document.getElementById("moodResult").textContent = "ไม่พบใบหน้า";
           return;
         }
-
         let topMood = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0][0];
         if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
         if (topMood === "surprise") topMood = "happiness";
-
         document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
-
-        let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp";
+        let url = "https://www.youtube.com/watch?v=ekr2nIex040";
         if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
-        if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
-        if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
+        if (topMood === "sadness")  url = getRandomLink("sadnessLinks")  || "https://www.youtube.com/watch?v=Jkj36B1YuDU";
+        if (topMood === "anger")    url = getRandomLink("angerLinks")    || "https://www.youtube.com/watch?v=eTedtzozrAo";
         if (topMood === "neutral")  url = getRandomLink("neutralLinks")  || "https://www.youtube.com/watch?v=5qap5aO4i9A";
-
         document.getElementById("linkContainer").innerHTML = `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${topMood}</a>`;
       })
       .catch(err => {
@@ -295,7 +314,6 @@
     }
     const darkModeStored = localStorage.getItem('darkMode') === 'true';
     setDarkMode(darkModeStored);
-
     darkToggle.addEventListener('click', () => {
       const isDark = document.body.classList.contains('dark');
       setDarkMode(!isDark);
