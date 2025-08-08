@@ -158,7 +158,6 @@
 </main>
 
 <script>
-  // Your Face++ API keys (replace with your own)
   const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
   const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
 
@@ -171,7 +170,6 @@
   const takePhotoBtn = document.getElementById("takePhotoBtn");
   const uploadInput = document.getElementById("uploadInput");
 
-  // Save loaded video stream
   let stream = null;
 
   async function startCamera() {
@@ -193,20 +191,17 @@
     return links.length > 0 ? links[Math.floor(Math.random() * links.length)] : null;
   }
 
-  // Extract YouTube video ID from URL
   function extractYouTubeID(url) {
     const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   }
 
-  // Create clickable link with thumbnail and title fallback
   function createTrackCard(url) {
     const id = extractYouTubeID(url);
     if (!id) return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
 
     const thumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-    // For demo, use URL as title because no YouTube Data API key here
     return `
       <a href="${url}" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; gap:12px; margin-bottom:8px; color:#80cbc4; text-decoration:none;">
         <img src="${thumb}" alt="Thumbnail" width="80" height="45" style="border-radius:6px; flex-shrink:0;">
@@ -214,7 +209,6 @@
       </a>`;
   }
 
-  // Analyze image base64 with Face++ API
   async function detectEmotion(base64) {
     msg.textContent = "กำลังวิเคราะห์อารมณ์...";
     moodResult.textContent = "";
@@ -242,15 +236,13 @@
       }
       const emotions = json.faces[0].attributes.emotion;
 
-      // Map some emotions to basic moods
       let topMood = Object.entries(emotions).sort((a,b) => b[1] - a[1])[0][0];
       if (topMood === "disgust" || topMood === "fear") topMood = "sadness";
       if (topMood === "surprise") topMood = "happiness";
 
       moodResult.textContent = "อารมณ์ที่ตรวจพบ: " + topMood;
 
-      // Get YouTube link for detected mood
-      let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"; // fallback
+      let url = "https://www.youtube.com/watch?v=ekr2nIex040&list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp";
       if (topMood === "happiness") url = getRandomLink("happinessLinks") || url;
       else if (topMood === "sadness") url = getRandomLink("sadnessLinks") || "https://www.youtube.com/watch?v=Jkj36B1YuDU&list=PL3-sRm8xAzY-w9GS19pLXMyFRTuJcuUjy";
       else if (topMood === "anger") url = getRandomLink("angerLinks") || "https://www.youtube.com/watch?v=eTedtzozrAo&list=PL_DLs_evwBCPJIV8dvseeFazY0UNjZw3q";
@@ -263,14 +255,12 @@
     }
   }
 
-  // Take photo from video stream and get base64
   function takePhoto() {
     if (!stream) {
       msg.textContent = "กล้องยังไม่พร้อม กรุณารอสักครู่";
       return;
     }
 
-    // Set canvas size to video size
     const track = stream.getVideoTracks()[0];
     const settings = track.getSettings();
     canvas.width = settings.width || video.videoWidth || 320;
@@ -292,7 +282,6 @@
     }, "image/jpeg", 0.95);
   }
 
-  // Handle file upload and analyze
   function handleUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -309,7 +298,6 @@
     reader.readAsDataURL(file);
   }
 
-  // Load saved links from localStorage on start
   ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"].forEach(id => {
     const el = document.getElementById(id);
     el.value = localStorage.getItem(id) || "";
@@ -318,9 +306,7 @@
     });
   });
 
-  // Start camera immediately on page load
   window.addEventListener("load", startCamera);
-
   takePhotoBtn.addEventListener("click", takePhoto);
   uploadInput.addEventListener("change", handleUpload);
 </script>
