@@ -71,12 +71,9 @@
     box-shadow: 0 6px 18px rgba(90,170,255,0.12);
     background: #111;
     flex-shrink: 0;
-  }
-  .logo img {
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
   .brand h1{margin:0;font-size:18px;letter-spacing:-0.2px}
   .brand p{margin:0;font-size:12px;color:var(--muted)}
@@ -213,8 +210,20 @@
     <!-- LEFT: controller -->
     <section class="panel" aria-label="Controls panel">
       <div class="brand header">
-        <div class="logo">
-          <img src="logo.png" alt="AI Mood DJ Logo">
+        <div class="logo" aria-label="AI Mood DJ logo" role="img" tabindex="0">
+          <!-- Inline SVG Logo -->
+          <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#6ee7b7"/>
+                <stop offset="100%" stop-color="#5aa9ff"/>
+              </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="48" fill="url(#grad)" />
+            <text x="50%" y="58%" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="52" fill="white" dominant-baseline="middle" style="user-select:none;">
+              AI
+            </text>
+          </svg>
         </div>
         <div class="brand">
           <h1>AI Mood DJ</h1>
@@ -222,7 +231,7 @@
         </div>
         <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
           <button id="openSettings" class="btn" title="Settings">⚙️ ตั้งค่า</button>
-          <button id="infoReset" class="btn ghost" title="Reset saved lists">♻️ รีเซ็ต</button>
+          <button id="infoReset" class="btn ghost" title="รีเซ็ตข้อมูลเพลง">♻️ รีเซ็ต</button>
         </div>
       </div>
 
@@ -241,7 +250,7 @@
 
       <div class="controls">
         <label for="uploadFile" class="btn" title="Upload image">📤 อัปโหลดรูป</label>
-        <input id="uploadFile" type="file" accept="image/*">
+        <input id="uploadFile" type="file" accept="image/*" />
         <button id="snap" class="btn prim">📸 ถ่ายภาพ</button>
         <button id="demoFace" class="btn">👁️ ทดสอบตัวอย่าง</button>
       </div>
@@ -327,30 +336,28 @@ const saveSettings = document.getElementById('saveSettings');
 const closeSave = document.getElementById('closeSave');
 const infoReset = document.getElementById('infoReset');
 
-/* textareas */
-const ids = ['happinessLinks','sadnessLinks','angerLinks','neutralLinks'];
+/* IDs of textarea for moods */
+const ids = ['happinessLinks', 'sadnessLinks', 'angerLinks', 'neutralLinks'];
 
-/* initialize media */
+/* Camera start */
 async function startCamera(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio:false });
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
     video.srcObject = stream;
-    statusArea.textContent = "กล้องพร้อมใช้งาน — คุณสามารถถ่ายภาพได้";
-  }catch(err){
-    console.warn(err);
-    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้ — กรุณาอนุญาตกล้องหรืออัปโหลดรูปแทน";
+  } catch(e){
+    statusArea.textContent = "ไม่สามารถเปิดกล้องได้ โปรดลองอัปโหลดรูปแทน";
   }
 }
 startCamera();
 
-/* drawer control */
-openSettings.addEventListener('click', ()=> {
+/* Drawer open/close */
+openSettings.addEventListener('click', ()=>{
   drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false');
 });
-closeDrawer.addEventListener('click', ()=> {
+closeDrawer.addEventListener('click', ()=>{
   drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true');
 });
-closeSave.addEventListener('click', ()=> {
+closeSave.addEventListener('click', ()=>{
   drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true');
 });
 
@@ -414,149 +421,5 @@ function setMood(mood, confidence=0) {
   let moodMap = {
     happiness: {emoji:'😄', desc:'คุณดูมีความสุขมาก! เพลงที่เหมาะสมจะช่วยเพิ่มพลังงานให้คุณ', color:'var(--accent)'},
     sadness: {emoji:'😢', desc:'ดูเหมือนคุณกำลังเศร้า เพลงเหล่านี้อาจช่วยให้คุณผ่อนคลาย', color:'#5599cc'},
-    anger:   {emoji:'😠', desc:'คุณดูโกรธอยู่ เพลงเหล่านี้อาจช่วยให้คุณสงบลง', color:'#cc5555'},
-    neutral: {emoji:'🙂', desc:'คุณดูปกติ เพลงเหล่านี้เหมาะสำหรับคุณ', color:'var(--muted)'}
-  };
-
-  if(!moodMap[mood]) mood = 'neutral';
-
-  moodEmoji.textContent = moodMap[mood].emoji;
-  moodTitle.textContent = `อารมณ์: ${mood.charAt(0).toUpperCase()+mood.slice(1)}`;
-  moodDesc.textContent = moodMap[mood].desc;
-  detectedConfidence.textContent = `ความมั่นใจ: ${(confidence*100).toFixed(1)}%`;
-
-  moodEmoji.style.backgroundColor = moodMap[mood].color;
-
-  // Clear previous tracks
-  tracksGrid.innerHTML = '';
-
-  // Load saved YouTube URLs
-  let rawList = localStorage.getItem(mood + 'Links') || '';
-  let ytLinks = rawList.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-
-  if(ytLinks.length === 0){
-    tracksGrid.innerHTML = '<p style="color:var(--muted)">ยังไม่มีเพลงในหมวดนี้ กรุณาตั้งค่าเพลงก่อน</p>';
-    return;
-  }
-
-  // Pick up to 4 random tracks
-  let selected = [];
-  for(let i=0; i<4; i++){
-    let pick = randomItem(ytLinks);
-    if(pick && !selected.includes(pick)) selected.push(pick);
-  }
-
-  // Generate track cards
-  selected.forEach(url=>{
-    let vid = extractVideoID(url);
-    if(!vid) return;
-    let card = document.createElement('div');
-    card.className = 'track';
-    card.innerHTML = `
-      <div class="title">${url}</div>
-      <button class="play-btn" onclick="window.open('https://youtu.be/${vid}','_blank')">▶️ เล่นเพลง</button>
-    `;
-    tracksGrid.appendChild(card);
-  });
-}
-
-/* Use Face++ API to detect mood from image */
-async function analyzeImage(imageBlob) {
-  statusArea.textContent = "กำลังวิเคราะห์อารมณ์...";
-  rawDebug.textContent = "";
-
-  const form = new FormData();
-  form.append('api_key', apiKey);
-  form.append('api_secret', apiSecret);
-  form.append('return_attributes', 'emotion');
-  form.append('image_file', imageBlob);
-
-  try {
-    const resp = await fetch('https://api-us.faceplusplus.com/facepp/v3/detect', {
-      method:'POST',
-      body:form,
-    });
-    if(!resp.ok) throw new Error('API request failed');
-    const data = await resp.json();
-
-    rawDebug.textContent = JSON.stringify(data, null, 2);
-
-    if(!data.faces || data.faces.length === 0){
-      statusArea.textContent = "ไม่พบใบหน้าในภาพ กรุณาลองใหม่";
-      setMood('neutral', 0);
-      return;
-    }
-
-    const emotions = data.faces[0].attributes.emotion;
-
-    // Determine dominant emotion from Face++ emotions
-    let maxKey = 'neutral';
-    let maxVal = 0;
-    for(let key in emotions){
-      if(emotions[key] > maxVal) {
-        maxVal = emotions[key];
-        maxKey = key;
-      }
-    }
-
-    // Map Face++ emotions to moods (simplified)
-    let moodMap = {
-      happiness: 'happiness',
-      sadness: 'sadness',
-      anger: 'anger',
-      neutral: 'neutral',
-      surprise: 'happiness',
-      fear: 'sadness',
-      disgust: 'anger'
-    };
-
-    let mood = moodMap[maxKey] || 'neutral';
-
-    statusArea.textContent = `ตรวจจับอารมณ์: ${mood} (ความมั่นใจ ${maxVal}%)`;
-
-    setMood(mood, maxVal/100);
-  }catch(err){
-    console.error(err);
-    statusArea.textContent = "เกิดข้อผิดพลาดในการวิเคราะห์ กรุณาลองใหม่";
-  }
-}
-
-/* Take snapshot from video */
-function takeSnapshot(){
-  if(!video.srcObject){
-    statusArea.textContent = "กล้องไม่พร้อมใช้งาน กรุณาอัปโหลดรูปแทน";
-    return;
-  }
-  let canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  let ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  canvas.toBlob(blob=>{
-    analyzeImage(blob);
-  }, 'image/jpeg');
-}
-
-/* Upload file */
-uploadFile.addEventListener('change', e=>{
-  if(e.target.files.length === 0) return;
-  let file = e.target.files[0];
-  analyzeImage(file);
-});
-
-/* Button to snap */
-snapBtn.addEventListener('click', takeSnapshot);
-
-/* Demo Face button (predefined image) */
-document.getElementById('demoFace').addEventListener('click', () => {
-  statusArea.textContent = "กำลังวิเคราะห์ภาพตัวอย่าง...";
-  fetch('https://raw.githubusercontent.com/AthiwatThananchai/face-detect-api/main/demo-image.jpg')
-    .then(res => res.blob())
-    .then(blob => analyzeImage(blob))
-    .catch(e=>{
-      statusArea.textContent = "โหลดภาพตัวอย่างล้มเหลว";
-    });
-});
-</script>
-</body>
-</html>
+    anger:   {emoji:'😠', desc:'คุณดูโกรธอยู่ เพลงเหล่านี้อาจช่วยให้คุณสงบลง', color:'#cc
+  
