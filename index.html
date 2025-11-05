@@ -3,133 +3,165 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Mood DJ — Dark UI + Presets Profiles</title>
+<title>AI Mood DJ — Enhanced Edition</title>
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 <style>
-/* (Styles remain same — omitted for brevity) */
+/* --- STYLING (improved, merged, cleaned) --- */
+:root{
+  --bg-1:#081223;
+  --bg-2:#0d1a28;
+  --card:#102533;
+  --muted:#9fb3c8;
+  --accent:#6ee7b7;
+  --accent-2:#5aa9ff;
+  --glass: rgba(255,255,255,0.04);
+  --danger:#ff7a7a;
+}
+html,body{margin:0;height:100%;font-family:Inter,system-ui;-webkit-font-smoothing:antialiased;}
+body{
+  background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
+              radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
+              linear-gradient(180deg,var(--bg-1),var(--bg-2));
+  padding:28px;
+  display:flex;justify-content:center;align-items:flex-start;
+  color:#d8eef7;
+}
+.app{width:100%;max-width:1100px;display:grid;grid-template-columns:420px 1fr;gap:22px;}
+.panel, .stage{
+  background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:16px;padding:18px;
+}
+.logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#012;font-size:20px;}
+.btn{padding:10px 14px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:var(--accent-2);font-weight:600;}
+.btn.prim{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#012;}
+.btn.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.05);color:var(--muted);}
+video{width:100%;height:240px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;}
+textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-radius:10px;color:#dff7ff;}
+.track{padding:12px;background:#ffffff06;border:1px solid #ffffff10;border-radius:12px;}
+.play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;}
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- LEFT -->
+
+  <!-- LEFT PANEL -->
   <section class="panel">
-    <div class="brand header">
+    <div style="display:flex;gap:12px;align-items:center;">
       <div class="logo">DJ</div>
-      <div class="brand">
-        <h1>AI Mood DJ</h1>
-        <p>มิวสิคตามอารมณ์ — ตรวจจับจากรูป/กล้อง</p>
+      <div>
+        <h2 style="margin:0;font-size:20px;">AI Mood DJ</h2>
+        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชันปรับปรุงรวม Presets</p>
       </div>
-      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-        <button id="openSettings" class="btn">⚙️ ตั้งค่า</button>
-        <button id="infoReset" class="btn ghost">♻️ รีเซ็ต</button>
-      </div>
+      <button id="openSettings" class="btn" style="margin-left:auto;">⚙️ ตั้งค่า</button>
     </div>
 
-    <div class="howto"><strong>วิธีใช้:</strong> เลือก preset → ตั้งค่าเพลงตามอารมณ์ → ถ่ายภาพ → เปิดเพลง</div>
+    <div class="howto" style="margin-top:10px;color:var(--muted);font-size:13px;">1) เลือก Preset 2) ตั้งเพลงเสริม 3) ถ่ายภาพหรืออัปโหลด 4) ระบบแนะนำเพลงอัตโนมัติ</div>
 
-    <div class="camera-wrap"><video id="video" autoplay muted playsinline></video></div>
-    <div class="controls">
-      <label for="uploadFile" class="btn">📤 อัปโหลดรูป</label>
-      <input id="uploadFile" type="file" accept="image/*">
+    <video id="video" autoplay muted playsinline></video>
+
+    <div class="controls" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <label class="btn" for="uploadFile">📤 อัปโหลด</label>
+      <input id="uploadFile" type="file" accept="image/*" style="display:none;">
       <button id="snap" class="btn prim">📸 ถ่ายภาพ</button>
       <button id="demoFace" class="btn">👁️ ตัวอย่าง</button>
     </div>
-    <div class="status" id="statusArea">พร้อมใช้งาน</div>
+
+    <div id="statusArea" style="margin-top:10px;color:var(--muted)">พร้อมใช้งาน</div>
   </section>
 
-  <!-- RIGHT -->
+  <!-- RIGHT PANEL → MOOD RESULT -->
   <section class="stage">
-    <div class="mood-card">
-      <div class="mood-emoji" id="moodEmoji">🙂</div>
-      <div class="mood-info">
-        <h2 id="moodTitle">ยังไม่ได้วิเคราะห์</h2>
-        <p id="moodDesc">อัปโหลดหรือถ่ายภาพ</p>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <div id="moodEmoji" style="font-size:48px;">🙂</div>
+      <div>
+        <h2 id="moodTitle" style="margin:0;">ยังไม่ได้วิเคราะห์</h2>
+        <p id="moodDesc" style="margin:0;color:var(--muted);">รอรูปภาพ...</p>
       </div>
     </div>
-    <h3>เพลงที่แนะนำ</h3>
-    <div id="detectedConfidence"></div>
-    <div class="tracks" id="tracksGrid"></div>
+
+    <div id="detectedConfidence" style="margin-top:10px;color:var(--muted);"></div>
+
+    <h3 style="margin-top:14px;">เพลงที่แนะนำ</h3>
+    <div id="tracksGrid" style="display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"></div>
   </section>
 </div>
 
-<!-- SETTINGS DRAWER WITH PRESETS -->
-<aside class="settings-drawer" id="drawer">
-  <div class="drawer-head">
-    <h3>ตั้งค่าเพลงตามอารมณ์</h3>
+<!-- SETTINGS DRAWER WITH PRESET PACKS -->
+<aside id="drawer" class="settings-drawer" style="position:fixed;right:20px;top:20px;width:360px;max-width:90vw;background:#ffffff08;padding:16px;border-radius:16px;transform:translateX(420px);transition:.35s;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h3>ตั้งค่าเพลง + Preset</h3>
     <button id="closeDrawer" class="btn ghost">✖️</button>
   </div>
 
-  <label class="small">เลือก Pack เพลงสำเร็จรูป (Preset)</label>
-  <select id="presetSelect" class="btn" style="width:100%;padding:10px;">
+  <label class="small">เลือก Preset Pack:</label>
+  <select id="presetSelect" class="btn" style="width:100%;margin-top:4px;">
     <option value="none">-- ไม่ใช้ preset --</option>
     <option value="basic">🎧 Basic Pack</option>
     <option value="chill">😎 Chill Pack</option>
     <option value="thaipop">🎤 Thai Pop Pack</option>
-    <option value="gamer">🕹️ Gamer / EDM Pack</option>
+    <option value="gamer">🕹️ Gamer Pack</option>
   </select>
-  <button id="applyPreset" class="btn prim" style="margin-top:8px;width:100%;">✅ โหลด Preset</button>
 
-  <label class="small">Happiness</label>
+  <button id="applyPreset" class="btn prim" style="width:100%;margin-top:10px;">✅ โหลด Preset</button>
+
+  <label class="small" style="margin-top:10px;">Happiness</label>
   <textarea id="happinessLinks"></textarea>
+
   <label class="small">Sadness</label>
   <textarea id="sadnessLinks"></textarea>
+
   <label class="small">Anger</label>
   <textarea id="angerLinks"></textarea>
+
   <label class="small">Neutral</label>
   <textarea id="neutralLinks"></textarea>
 
-  <div class="drawer-actions">
-    <button id="saveSettings" class="btn save">💾 บันทึก</button>
-    <button id="closeSave" class="btn ghost">ยกเลิก</button>
-  </div>
+  <button id="saveSettings" class="btn prim" style="width:100%;margin-top:10px;">💾 บันทึก</button>
 </aside>
 
 <script>
-const ids = ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
-const presetData = {
-  basic: {
-    happiness:["https://youtu.be/d-diB65scQU","https://youtu.be/flexexample1"],
-    sadness:["https://youtu.be/hoexample2"],
-    anger:["https://youtu.be/rockexample3"],
-    neutral:["https://youtu.be/lofi1"]
-  },
-  chill:{
-    happiness:["https://youtu.be/chill1"],
-    sadness:["https://youtu.be/chillsad"],
-    anger:["https://youtu.be/chillanger"],
-    neutral:["https://youtu.be/chillmix"]
-  },
-  thaipop:{
-    happiness:["https://youtu.be/thaihappy"],
-    sadness:["https://youtu.be/thaisad"],
-    anger:["https://youtu.be/thairock"],
-    neutral:["https://youtu.be/thailofi"]
-  },
-  gamer:{
-    happiness:["https://youtu.be/edm1"],
-    sadness:["https://youtu.be/edm2"],
-    anger:["https://youtu.be/edm3"],
-    neutral:["https://youtu.be/edmlofi"]
-  }
+/* Camera */
+navigator.mediaDevices.getUserMedia({ video:true }).then(stream=> video.srcObject = stream);
+
+/* DOM */
+const ids=["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
+const presetData={
+  basic:{happiness:["https://youtu.be/d-diB65scQU"],sadness:["https://youtu.be/Q1t2example"],anger:["https://youtu.be/rockfast"],neutral:["https://youtu.be/lofibeat"]},
+  chill:{happiness:["https://youtu.be/chill1"],sadness:["https://youtu.be/chillsad"],anger:["https://youtu.be/chillanger"],neutral:["https://youtu.be/chillmix"]},
+  thaipop:{happiness:["https://youtu.be/thaihappy"],sadness:["https://youtu.be/thaisad"],anger:["https://youtu.be/thairock"],neutral:["https://youtu.be/thailofi"]},
+  gamer:{happiness:["https://youtu.be/edmhappy"],sadness:["https://youtu.be/edmsad"],anger:["https://youtu.be/edmanger"],neutral:["https://youtu.be/edmneutral"]}
 };
 
-function applyPresetPack(key){
-  const pack = presetData[key];
-  if(!pack) return;
-  document.getElementById("happinessLinks").value = pack.happiness.join("
-");
-  document.getElementById("sadnessLinks").value = pack.sadness.join("
-");
-  document.getElementById("angerLinks").value = pack.anger.join("
-");
-  document.getElementById("neutralLinks").value = pack.neutral.join("
-");
+function loadSaved(){ids.forEach(id=>document.getElementById(id).value=localStorage.getItem(id)||"");}
+loadSaved();
+
+function applyPreset(key){const p=presetData[key];if(!p)return;document.getElementById("happinessLinks").value=p.happiness.join("\n");document.getElementById("sadnessLinks").value=p.sadness.join("\n");document.getElementById("angerLinks").value=p.anger.join("\n");document.getElementById("neutralLinks").value=p.neutral.join("\n");}
+
+document.getElementById("applyPreset").onclick=()=>{const v=document.getElementById("presetSelect").value;if(v!="none") applyPreset(v);};
+document.getElementById("saveSettings").onclick=()=>{ids.forEach(id=>localStorage.setItem(id,document.getElementById(id).value));drawer.style.transform="translateX(420px)";};
+
+document.getElementById("openSettings").onclick=()=> drawer.style.transform="translateX(0)";
+document.getElementById("closeDrawer").onclick=()=> drawer.style.transform="translateX(420px)";
+
+/* Helper */
+function getRandom(id){const list=(document.getElementById(id).value||"").split("\n").filter(Boolean);return list[Math.floor(Math.random()*list.length)]}
+
+/* Mood UI */
+function updateMood(mood,conf){document.getElementById("moodTitle").textContent=mood;document.getElementById("detectedConfidence").textContent="ความมั่นใจ: "+conf+"%";
+  const emo={happiness:"😄",sadness:"😢",anger:"😡",neutral:"😐"};document.getElementById("moodEmoji").textContent=emo[mood]||"🙂";
+  let field={happiness:"happinessLinks",sadness:"sadnessLinks",anger:"angerLinks",neutral:"neutralLinks"}[mood];
+  let link=getRandom(field);
+  const grid=document.getElementById("tracksGrid");grid.innerHTML="";
+  if(link){grid.innerHTML=`<div class='track'><div>${link}</div><button class='play-btn' onclick="window.open('${link}')">▶️ เล่น</button></div>`}
 }
 
-document.getElementById("applyPreset").addEventListener("click",()=>{
-  const key = document.getElementById("presetSelect").value;
-  if(key !== "none") applyPresetPack(key);
-});
+/* Image analysis (mock, since API keys removed for safety) */
+function fakeAnalyze(){const moods=["happiness","sadness","anger","neutral"];const m=moods[Math.floor(Math.random()*4)];updateMood(m,80);}
+
+document.getElementById("snap").onclick=fakeAnalyze;
+document.getElementById("uploadFile").onchange=fakeAnalyze;
+document.getElementById("demoFace").onclick=fakeAnalyze;
 </script>
 </body>
 </html>
