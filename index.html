@@ -148,7 +148,7 @@ document.getElementById("closeDrawer").onclick=()=> drawer.style.transform="tran
 function getRandom(id){const list=(document.getElementById(id).value||"").split("\n").filter(Boolean);return list[Math.floor(Math.random()*list.length)]}
 
 /* Mood UI */
-function updateMood(mood,conf){document.getElementById("moodTitle").textContent=mood;document.getElementById("detectedConfidence").textContent="ความมั่นใจ: "Math.random(60, 70)"%";
+function updateMood(mood,conf){document.getElementById("moodTitle").textContent=mood;document.getElementById("detectedConfidence").textContent="ความมั่นใจ: "+conf+"%";
   const emo={happiness:"😄",sadness:"😢",anger:"😡",neutral:"😐"};document.getElementById("moodEmoji").textContent=emo[mood]||"🙂";
   let field={happiness:"happinessLinks",sadness:"sadnessLinks",anger:"angerLinks",neutral:"neutralLinks"}[mood];
   let link=getRandom(field);
