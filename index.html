@@ -127,10 +127,10 @@ navigator.mediaDevices.getUserMedia({ video:true }).then(stream=> video.srcObjec
 /* DOM */
 const ids=["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
 const presetData={
-  basic:{happiness:["https://youtu.be/d-diB65scQU"],sadness:["https://youtu.be/Q1t2example"],anger:["https://youtu.be/rockfast"],neutral:["https://youtu.be/lofibeat"]},
-  chill:{happiness:["https://youtu.be/chill1"],sadness:["https://youtu.be/chillsad"],anger:["https://youtu.be/chillanger"],neutral:["https://youtu.be/chillmix"]},
-  thaipop:{happiness:["https://youtu.be/thaihappy"],sadness:["https://youtu.be/thaisad"],anger:["https://youtu.be/thairock"],neutral:["https://youtu.be/thailofi"]},
-  gamer:{happiness:["https://youtu.be/edmhappy"],sadness:["https://youtu.be/edmsad"],anger:["https://youtu.be/edmanger"],neutral:["https://youtu.be/edmneutral"]}
+  basic:{happiness:["https://youtube.com/playlist?list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp&si=jIcL5It-l4SGd0MQ"],sadness:["https://youtu.be/POETazMpykQ?si=1pEZMgYmzs05dg5U"],anger:["https://youtu.be/t9mCFx_zF8U?si=B-qXzMrLcdiREeE_"],neutral:["https://youtu.be/n61ULEU7CO0?si=IHaT_bvKNA4V25ct"]},
+  chill:{happiness:["https://youtu.be/xNSx7NYZ4fM?si=6Fgq8tByg9YY8d3q"],sadness:["https://youtu.be/_c7xxwWbljk?si=hg0-blrg7sPiwxM2"],anger:["https://youtu.be/6m2Ma8uX74s?si=b40pBFqKjBboM2mA"],neutral:["https://youtu.be/EkVbIfRPQAg?si=qj3dDIVys123ynW1"]},
+  thaipop:{happiness:["https://youtu.be/nJFJvO83o_s?si=J13zH2kdiFRAuZ93"],sadness:["https://youtu.be/eY7iqYmQNhE?si=ZPqLZwFYqE5fNu0c"],anger:["https://youtube.com/playlist?list=PLZSdxWoL6_WD8dpQE9iluLw3yYVQJphYp&si=vWlUR_9Vi6vrwWF1"],neutral:["https://youtu.be/aHoyTRlHCr4?si=nrWD5uHqZwzq8vWd"]},
+  gamer:{happiness:["https://youtu.be/ih2xubMaZWI?si=4unlGPLe5qX6soL0"],sadness:["https://youtu.be/M1YriKcNIco?si=n6FMLeQSmBlA5Wmd"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN&si=vzwFD4AGIiWIcP9D"],neutral:["https://youtu.be/3fxq7kqyWO8?si=mKVP1LGF1UPOcL-1"]}
 };
 
 function loadSaved(){ids.forEach(id=>document.getElementById(id).value=localStorage.getItem(id)||"");}
