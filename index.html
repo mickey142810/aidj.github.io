@@ -1,606 +1,297 @@
-<!doctype html>
+<!DOCTYPE html> 
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Mood DJ — Stable Live Mood Detection</title>
-<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Mood DJ 🎶</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      padding: 20px;
+      text-align: center;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      position: relative;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .settings {
+      position: absolute;
+      top: 10px;
+      right: 40px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+    }
+    .darkmode-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      user-select: none;
+    }
+    .settings-panel {
+      display: none;
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+      z-index: 10;
+      width: 250px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .settings-panel textarea {
+      width: 100%;
+      height: 60px;
+      margin-bottom: 10px;
+      resize: vertical;
+      background: white;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      transition: background 0.3s, color 0.3s;
+    }
+    video {
+      width: 100%;
+      border-radius: 10px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-weight: bold;
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    a {
+      display: block;
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .tutorial {
+      text-align: left;
+      background: #e3f2fd;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      transition: background 0.3s, color 0.3s;
+    }
 
-<!-- IMPORTANT: Load face-api.js FIRST (no defer) -->
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
-<style>
-:root{
-  --bg-1:#081223;
-  --bg-2:#0d1a28;
-  --card:#102533;
-  --muted:#9fb3c8;
-  --accent:#6ee7b7;
-  --accent-2:#5aa9ff;
-  --glass: rgba(255,255,255,0.04);
-  --danger:#ff7a7a;
-}
-html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue";-webkit-font-smoothing:antialiased;}
-body{
-  background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
-              radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
-              linear-gradient(180deg,var(--bg-1),var(--bg-2));
-  padding:24px;
-  display:flex;justify-content:center;align-items:flex-start;
-  color:#d8eef7;
-}
-.app{width:100%;max-width:1120px;display:grid;grid-template-columns:430px 1fr;gap:20px;}
-.panel, .stage{
-  background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
-  border:1px solid rgba(255,255,255,0.05);
-  border-radius:16px;padding:18px;
-}
-.logo{width:58px;height:58px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#012;font-size:20px;}
-.btn{padding:10px 14px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:var(--accent-2);font-weight:600;}
-.btn.prim{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#012;}
-.btn.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.05);color:var(--muted);}
-video{width:100%;height:260px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;display:block;}
-.canvasOverlay{position:absolute;left:0;top:0;pointer-events:none;border-radius:12px;}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;border-radius:10px;color:#dff7ff;min-height:48px;}
-.track{padding:12px;background:#ffffff06;border:1px solid #ffffff10;border-radius:12px;}
-.play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;cursor:pointer;}
-.statusLine{margin-top:8px;color:var(--muted);font-size:13px;}
-.overlayContainer{position:relative;border-radius:12px;overflow:hidden;}
-.moodEmoji{font-size:48px;}
-.small{font-size:12px;color:var(--muted);display:block;margin-top:8px;}
-.slider{width:100%}
-.footerNote{font-size:12px;color:var(--muted);margin-top:8px}
-</style>
+    /* Dark Mode Styles */
+    body.dark { background: #121212; color: #ddd; }
+    body.dark .container { background: #1e1e1e; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+    body.dark .settings-panel { background: #2c2c2c; border-color: #555; color: #ddd; }
+    body.dark .settings-panel textarea { background: #333; color: #ddd; border-color: #555; }
+    body.dark button { background-color: #42a5f5; color: #121212; }
+    body.dark button:hover { background-color: #1e88e5; color: white; }
+    body.dark a { color: #80cbc4; }
+    body.dark .tutorial { background: #263238; color: #ddd; }
+  </style>
 </head>
 
 <body>
-<div class="app">
+  <div class="container">
+    <h1>AI Mood DJ 🎧</h1>
 
-  <!-- LEFT PANEL -->
-  <section class="panel">
-    <div style="display:flex;gap:12px;align-items:center;">
-      <div class="logo">DJ</div>
-      <div>
-        <h2 style="margin:0;font-size:20px;">AI Mood DJ</h2>
-        <p style="margin:0;color:var(--muted);font-size:13px;">Live Detection (smoothing, landmarks)</p>
-      </div>
-      <button id="openSettings" class="btn" style="margin-left:auto;">⚙️ ตั้งค่า</button>
+    <div class="tutorial">
+      <h3>📋 วิธีใช้งาน:</h3>
+      <ol>
+        <li>🛠️ คลิกปุ่มรูปเฟือง → วางลิงก์ YouTube สำหรับแต่ละอารมณ์ หรือโหลด Preset</li>
+        <li>📷 ถ่ายภาพผ่านกล้อง หรือ 📤 อัปโหลดภาพจากเครื่องของคุณ</li>
+        <li>🤖 AI จะตรวจจับอารมณ์ของคุณและเปิดเพลงที่เหมาะสม</li>
+      </ol>
     </div>
 
-    <div class="howto small" style="margin-top:10px;color:var(--muted);">
-      1) โหลด Preset → 2) กด "เริ่ม Live" → 3) ระบบจะแสดงอารมณ์แบบเรียลไทม์ (นุ่มขึ้น)
+    <!-- Settings Icon -->
+    <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" 
+         class="settings" onclick="toggleSettings()" title="Settings">
+
+    <div class="darkmode-toggle" id="darkmodeToggle" title="Toggle Dark Mode">🌙</div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="settings-panel" id="settingsPanel">
+
+      <!-- 🔥 NEW: PRESET PACK SECTION -->
+      <label class="small">เลือก Preset Pack:</label>
+      <select id="presetSelect" class="btn" style="width:100%;margin-top:4px;">
+        <option value="none">-- ไม่ใช้ preset --</option>
+        <option value="basic">🎧 Basic Pack</option>
+        <option value="chill">😎 Chill Pack</option>
+        <option value="thaipop">🎤 Thai Pop Pack</option>
+        <option value="gamer">🕹️ Gamer Pack</option>
+      </select>
+
+      <button id="applyPreset" class="btn prim" style="margin-top:10px;">✅ โหลด Preset</button>
+
+      <label>🎵 เพลงสำหรับอารมณ์สุข:</label>
+      <textarea id="happinessLinks"></textarea>
+
+      <label>🎵 เพลงสำหรับอารมณ์เศร้า:</label>
+      <textarea id="sadnessLinks"></textarea>
+
+      <label>🎵 เพลงสำหรับอารมณ์โกรธ:</label>
+      <textarea id="angerLinks"></textarea>
+
+      <label>🎵 เพลงสำหรับอารมณ์ปกติ:</label>
+      <textarea id="neutralLinks"></textarea>
+
+      <button id="saveSettings" class="btn prim">💾 บันทึก</button>
     </div>
 
-    <div class="overlayContainer" style="margin-top:12px;">
-      <video id="video" autoplay muted playsinline></video>
-      <canvas id="overlay" class="canvasOverlay"></canvas>
-    </div>
+    <video id="video" autoplay muted playsinline></video>
+    <input type="file" accept="image/*" id="uploadInput" onchange="handleUpload(event)">
+    <canvas id="canvas" width="300" height="225" style="display:none;"></canvas>
+    <button onclick="takePhoto()">📸 ถ่ายภาพ</button>
 
-    <div class="controls" style="margin-top:10px;">
-      <label class="btn" for="uploadFile">📤 อัปโหลด</label>
-      <input id="uploadFile" type="file" accept="image/*" style="display:none;">
-      <button id="snap" class="btn prim">📸 ถ่ายภาพ</button>
-      <button id="demoFace" class="btn">👁️ ตัวอย่าง</button>
-      <button id="startLive" class="btn prim">🔴 เริ่ม Live</button>
-      <button id="stopLive" class="btn ghost">⏹ หยุด Live</button>
-    </div>
-
-    <div id="statusArea" class="statusLine">กำลังเตรียมตัว...</div>
-    <div id="fpsArea" class="statusLine"></div>
-
-    <div style="margin-top:12px;">
-      <label class="small">Smoothing (0 = no smoothing, 0.9 = very smooth): <span id="smoothingVal">0.35</span></label>
-      <input id="smoothingSlider" class="slider" type="range" min="0" max="0.9" step="0.01" value="0.35">
-      <label class="small" style="margin-top:8px;">Process interval (ms): <span id="intervalVal">300</span></label>
-      <input id="intervalSlider" class="slider" type="range" min="80" max="1000" step="20" value="300">
-      <div class="footerNote">หมายเหตุ: ลดค่า interval จะเร็วขึ้นแต่ใช้ CPU มากขึ้น</div>
-    </div>
-  </section>
-
-  <!-- RIGHT PANEL → MOOD RESULT -->
-  <section class="stage">
-    <div style="display:flex;gap:16px;align-items:center;">
-      <div id="moodEmoji" class="moodEmoji">🙂</div>
-      <div>
-        <h2 id="moodTitle" style="margin:0;">ยังไม่ได้วิเคราะห์</h2>
-        <p id="moodDesc" style="margin:0;color:var(--muted);">รอรูปภาพหรือกล้อง...</p>
-      </div>
-    </div>
-
-    <div id="detectedConfidence" style="margin-top:10px;color:var(--muted);"></div>
-
-    <h3 style="margin-top:14px;">เพลงที่แนะนำ</h3>
-    <div id="tracksGrid" style="display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"></div>
-  </section>
-</div>
-
-<!-- SETTINGS DRAWER -->
-<aside id="drawer" style="position:fixed;right:20px;top:20px;width:360px;max-width:90vw;background:#ffffff08;padding:16px;border-radius:16px;transform:translateX(420px);transition:.35s;">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <h3>ตั้งค่าเพลง + Preset</h3>
-    <button id="closeDrawer" class="btn ghost">✖️</button>
+    <p id="loading" style="display:none;">กำลังวิเคราะห์อารมณ์...</p>
+    <p id="moodResult">อารมณ์ของคุณจะแสดงที่นี่...</p>
+    <div id="linkContainer"></div>
   </div>
 
-  <label class="small">Preset Pack:</label>
-  <select id="presetSelect" class="btn" style="width:100%;margin-top:4px;">
-    <option value="none">-- ไม่ใช้ preset --</option>
-    <option value="basic">🎧 Basic Pack</option>
-    <option value="chill">😎 Chill Pack</option>
-    <option value="thaipop">🎤 Thai Pop Pack</option>
-    <option value="gamer">🕹️ Gamer Pack</option>
-  </select>
+  <script>
+    const apiKey = "txJFYfuyTfkWF5J2BZRYGR6kOVotEq-4";
+    const apiSecret = "BhKRNGMyxO6SDvnFCQAy18VfP0Tdpn3L";
 
-  <button id="applyPreset" class="btn prim" style="width:100%;margin-top:10px;">โหลด Preset</button>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-  <label class="small" style="margin-top:10px;">Happiness</label>
-  <textarea id="happinessLinks"></textarea>
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(stream => video.srcObject = stream)
+      .catch(() => alert("กรุณาอนุญาตให้เข้าถึงกล้อง"));
 
-  <label class="small">Sadness</label>
-  <textarea id="sadnessLinks"></textarea>
-
-  <label class="small">Anger</label>
-  <textarea id="angerLinks"></textarea>
-
-  <label class="small">Neutral</label>
-  <textarea id="neutralLinks"></textarea>
-
-  <button id="saveSettings" class="btn prim" style="width:100%;margin-top:10px;">💾 บันทึก</button>
-</aside>
-
-<script>
-/* ---------------------------
-   CONFIG & STATE
-----------------------------*/
-const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/models";
-const video = document.getElementById("video");
-const overlay = document.getElementById("overlay");
-const overlayCtx = overlay.getContext("2d");
-const statusArea = document.getElementById("statusArea");
-const fpsArea = document.getElementById("fpsArea");
-
-let modelsLoaded = false;
-let liveRunning = false;
-let rafId = null;
-let lastProcess = 0;
-let processInterval = Number(document.getElementById("intervalSlider").value) || 300;
-let smoothingAlpha = Number(document.getElementById("smoothingSlider").value) || 0.35;
-
-// EMA-smoothed state
-let smoothBox = null;        // {x,y,width,height}
-let smoothExpression = null; // {happiness:val, sadness:val,...}
-let smoothLandmarks = null;  // array of points
-let lastFPSupdate = Date.now();
-let framesCount = 0;
-
-/* PRESET DATA */
-const ids = ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
-const presetData = {
-  basic:{happiness:["https://youtube.com/playlist?list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"],sadness:["https://youtu.be/POETazMpykQ"],anger:["https://youtu.be/t9mCFx_zF8U"],neutral:["https://youtu.be/n61ULEU7CO0"]},
-  chill:{happiness:["https://youtu.be/xNSx7NYZ4fM"],sadness:["https://youtu.be/_c7xxwWbljk"],anger:["https://youtu.be/6m2Ma8uX74s"],neutral:["https://youtu.be/EkVbIfRPQAg"]},
-  thaipop:{happiness:["https://youtu.be/nJFJvO83o_s"],sadness:["https://youtu.be/eY7iqYmQNhE"],anger:["https://youtube.com/playlist?list=PLZSdxWoL6_WD8dpQE9iluLw3yYVQJphYp"],neutral:["https://youtu.be/aHoyTRlHCr4"]},
-  gamer:{happiness:["https://youtu.be/ih2xubMaZWI"],sadness:["https://youtu.be/M1YriKcNIco"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN"],neutral:["https://youtu.be/3fxq7kqyWO8"]}
-};
-
-/* ---------------------------
-   UTIL / Preset UI
-----------------------------*/
-function loadSaved() {
-  ids.forEach(id => document.getElementById(id).value = localStorage.getItem(id) || "");
-}
-loadSaved();
-
-function applyPreset(key){
-  const p = presetData[key];
-  if(!p) return;
-  document.getElementById("happinessLinks").value = p.happiness.join("\n");
-  document.getElementById("sadnessLinks").value = p.sadness.join("\n");
-  document.getElementById("angerLinks").value = p.anger.join("\n");
-  document.getElementById("neutralLinks").value = p.neutral.join("\n");
-}
-document.getElementById("applyPreset").onclick = () => {
-  const v = document.getElementById("presetSelect").value;
-  if(v !== "none") applyPreset(v);
-};
-document.getElementById("saveSettings").onclick = () => {
-  ids.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
-  drawer.style.transform = "translateX(420px)";
-};
-document.getElementById("openSettings").onclick = ()=> drawer.style.transform="translateX(0)";
-document.getElementById("closeDrawer").onclick = ()=> drawer.style.transform="translateX(420px)";
-
-/* ---------------------------
-   MODEL LOADING
-----------------------------*/
-async function loadModels() {
-  statusArea.textContent = "กำลังโหลดโมเดล face-api.js ...";
-  try {
-    // detection + landmarks + expressions
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-    modelsLoaded = true;
-    statusArea.textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
-  } catch (e) {
-    console.error(e);
-    statusArea.textContent = "❌ โหลดโมเดลล้มเหลว: " + (e.message || e);
-  }
-}
-loadModels();
-
-/* ---------------------------
-   CAMERA
-----------------------------*/
-async function startCamera(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-    video.srcObject = stream;
-    await video.play();
-    // sync overlay size
-    resizeOverlay();
-    video.addEventListener("loadedmetadata", resizeOverlay);
-    window.addEventListener("resize", resizeOverlay);
-  } catch (e) {
-    console.error("Camera error:", e);
-    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้: " + e.message;
-  }
-}
-function stopCamera(){
-  if (video.srcObject) {
-    const tracks = video.srcObject.getTracks();
-    tracks.forEach(t => t.stop());
-    video.srcObject = null;
-  }
-}
-function resizeOverlay(){
-  overlay.width = video.videoWidth || 640;
-  overlay.height = video.videoHeight || 360;
-  overlay.style.width = video.offsetWidth + "px";
-  overlay.style.height = video.offsetHeight + "px";
-}
-
-/* ---------------------------
-   FACE EXPRESSION API (single function)
-   - returns detection, expressions, landmarks
-----------------------------*/
-async function getFaceExpression(input) {
-  if (!modelsLoaded) return null;
-  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-  const detection = await faceapi
-    .detectSingleFace(input, options)
-    .withFaceLandmarks()
-    .withFaceExpressions();
-
-  if (!detection) return null;
-
-  return detection; // contains detection, landmarks, expressions
-}
-
-/* ---------------------------
-   SMOOTHING HELPERS (EMA)
-----------------------------*/
-function ema(prev, curr, alpha) {
-  if (prev == null) return curr;
-  // both objects: numeric props
-  if (typeof prev === "object" && typeof curr === "object") {
-    const out = Array.isArray(curr) ? [] : {};
-    if (Array.isArray(curr)) {
-      for (let i = 0; i < curr.length; i++) {
-        if (typeof curr[i] === "number") out[i] = prev[i] * (1 - alpha) + curr[i] * alpha;
-        else out[i] = curr[i]; // fallback
-      }
-    } else {
-      for (const k of Object.keys(curr)) {
-        if (typeof curr[k] === "number") out[k] = prev[k] * (1 - alpha) + curr[k] * alpha;
-        else out[k] = curr[k];
-      }
+    /* TOGGLE SETTINGS */
+    function toggleSettings() {
+      const panel = document.getElementById("settingsPanel");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
     }
-    return out;
-  }
-  // numbers
-  if (typeof curr === "number") return prev * (1 - alpha) + curr * alpha;
-  return curr;
-}
 
-/* ---------------------------
-   Convert expressions mapping
-----------------------------*/
-function mapExpression(rawName) {
-  const convert = {
-    happy: "happiness",
-    sad: "sadness",
-    angry: "anger",
-    disgusted: "anger",
-    fearful: "sadness",
-    surprised: "happiness",
-    neutral: "neutral"
-  };
-  return convert[rawName] || "neutral";
-}
-
-/* ---------------------------
-   UPDATE MOOD UI & music recommendation
-----------------------------*/
-function getRandom(id){
-  const list = (document.getElementById(id).value || "")
-    .split("\n").map(s=>s.trim()).filter(Boolean);
-  return list[Math.floor(Math.random()*list.length)];
-}
-
-function updateMoodFromSmoothed(expObj) {
-  // expObj: {happy:0.5, sad:0.1, ...} (smoothed raw values)
-  // Determine top original label
-  const entries = Object.entries(expObj);
-  entries.sort((a,b)=>b[1]-a[1]);
-  const [rawTop, rawVal] = entries[0];
-  const mapped = mapExpression(rawTop);
-  const confPercent = Math.round(rawVal * 100);
-  document.getElementById("moodTitle").textContent = mapped;
-  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: " + confPercent + "%";
-  const emo = { happiness:"😄", sadness:"😢", anger:"😡", neutral:"😐" };
-  document.getElementById("moodEmoji").textContent = emo[mapped] || "🙂";
-
-  // recommend track
-  let field = {
-    happiness:"happinessLinks",
-    sadness:"sadnessLinks",
-    anger:"angerLinks",
-    neutral:"neutralLinks"
-  }[mapped];
-
-  const link = getRandom(field);
-  const grid = document.getElementById("tracksGrid");
-  grid.innerHTML = "";
-  if (link){
-    const div = document.createElement("div");
-    div.className = "track";
-    div.innerHTML = `
-      <div style="font-size:13px;word-break:break-all">${link}</div>
-      <button class="play-btn">▶️ เล่น</button>`;
-    div.querySelector("button").onclick = ()=> window.open(link, "_blank");
-    grid.appendChild(div);
-  }
-}
-
-/* ---------------------------
-   DRAWING: box + landmarks
-----------------------------*/
-function drawOverlay(box, landmarks, expressionLabel, confPercent) {
-  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
-
-  if (box) {
-    // box: {x,y,width,height}
-    const lineW = Math.max(2, Math.round(overlay.width / 260));
-    overlayCtx.lineWidth = lineW;
-    overlayCtx.strokeStyle = "rgba(90,170,255,0.95)";
-    overlayCtx.fillStyle = "rgba(10,10,10,0.45)";
-    overlayCtx.beginPath();
-    overlayCtx.rect(box.x, box.y, box.width, box.height);
-    overlayCtx.stroke();
-
-    // label
-    const label = `${expressionLabel} (${confPercent}%)`;
-    overlayCtx.font = `${Math.max(12, Math.round(overlay.width/60))}px sans-serif`;
-    const textW = overlayCtx.measureText(label).width;
-    const pad = 6;
-    const lx = box.x;
-    let ly = box.y - (overlay.height * 0.03) - 10;
-    if (ly < 0) ly = box.y + box.height + 6;
-    overlayCtx.fillStyle = "rgba(10,10,10,0.6)";
-    overlayCtx.fillRect(lx - 2, ly - 22, textW + pad*2 + 4, 24);
-    overlayCtx.fillStyle = "#fff";
-    overlayCtx.fillText(label, lx + pad, ly - 6);
-  }
-
-  if (landmarks && landmarks.length) {
-    overlayCtx.fillStyle = "rgba(255,255,255,0.95)";
-    const r = Math.max(1, Math.round(overlay.width / 400));
-    for (const p of landmarks) {
-      overlayCtx.beginPath();
-      overlayCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      overlayCtx.fill();
+    /* RANDOM LINK PICKER */
+    function getRandomLink(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (!raw) return null;
+      const links = raw.split("\n").filter(x => x.trim());
+      return links[Math.floor(Math.random() * links.length)];
     }
-  }
-}
 
-/* ---------------------------
-   PROCESS FRAME (throttled by processInterval)
-   - get detection
-   - smooth box, expressions, landmarks
-   - update UI + draw
-----------------------------*/
-async function processFrame() {
-  if (!modelsLoaded || !video || video.readyState < 2) return;
-  const now = Date.now();
-  if (now - lastProcess < processInterval) return;
-  lastProcess = now;
-
-  const detection = await getFaceExpression(video);
-  if (!detection) {
-    // fade to neutral slowly by EMA toward neutral values
-    if (smoothExpression) {
-      // target neutral: all zeros except neutral -> 1? We'll nudge toward small neutral
-      const target = {};
-      for (const k of Object.keys(smoothExpression)) target[k] = 0;
-      if ('neutral' in smoothExpression) target['neutral'] = 1;
-      smoothExpression = ema(smoothExpression, target, smoothingAlpha * 0.5);
-      updateMoodFromSmoothed(smoothExpression);
+    /* CAMERA PHOTO */
+    function takePhoto() {
+      document.getElementById("loading").style.display = "block";
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => detectEmotion(reader.result.split(',')[1]);
+        reader.readAsDataURL(blob);
+      }, "image/jpeg");
     }
-    drawOverlay(null, null, "no face", 0);
-    return;
-  }
 
-  // raw components
-  const boxRaw = detection.detection.box;
-  const landmarksRaw = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
-  const expressionsRaw = detection.expressions; // object with keys: happy, sad, etc.
+    /* UPLOAD IMAGE */
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-  // smoothing
-  // box as object
-  const boxObj = { x: boxRaw.x, y: boxRaw.y, width: boxRaw.width, height: boxRaw.height };
-  smoothBox = ema(smoothBox, boxObj, smoothingAlpha);
+      const reader = new FileReader();
+      reader.onloadend = () => detectEmotion(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    }
 
-  // expressions: ensure consistent keys order
-  const normExp = { neutral:0, happy:0, sad:0, angry:0, surprised:0, disgusted:0, fearful:0 };
-  for (const k of Object.keys(expressionsRaw)) normExp[k] = expressionsRaw[k];
-  smoothExpression = ema(smoothExpression, normExp, smoothingAlpha);
+    /* API CALL */
+    function detectEmotion(base64) {
+      const data = new URLSearchParams();
+      data.append("api_key", apiKey);
+      data.append("api_secret", apiSecret);
+      data.append("image_base64", base64);
+      data.append("return_attributes", "emotion");
 
-  // landmarks: array of points
-  smoothLandmarks = ema(smoothLandmarks, landmarksRaw, smoothingAlpha);
+      fetch("https://api-us.faceplusplus.com/facepp/v3/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: data.toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("loading").style.display = "none";
+        const emo = data?.faces?.[0]?.attributes?.emotion;
+        if (!emo) return document.getElementById("moodResult").textContent = "ไม่พบใบหน้า";
 
-  // find top expression from smoothed raw (not mapped yet)
-  const sorted = Object.entries(smoothExpression).sort((a,b)=>b[1]-a[1]);
-  const [topRaw, topVal] = sorted[0];
-  const mapped = mapExpression(topRaw);
-  const confPercent = Math.round(topVal * 100);
+        let mood = Object.entries(emo).sort((a,b)=>b[1]-a[1])[0][0];
+        if (mood === "fear" || mood === "disgust") mood = "sadness";
+        if (mood === "surprise") mood = "happiness";
 
-  // update UI
-  updateMoodFromSmoothed(smoothExpression);
+        document.getElementById("moodResult").textContent = "อารมณ์ที่ตรวจพบ: " + mood;
 
-  // draw overlay using smoothed box & landmarks
-  drawOverlay(smoothBox, smoothLandmarks, mapped, confPercent);
+        let url = getRandomLink(mood + "Links") || "https://www.youtube.com/watch?v=5qap5aO4i9A";
 
-  // fps counter
-  framesCount++;
-  if (Date.now() - lastFPSupdate > 1000) {
-    fpsArea.textContent = `FPS (ตรวจ): ${framesCount} /s`;
-    framesCount = 0;
-    lastFPSupdate = Date.now();
-  }
-}
+        document.getElementById("linkContainer").innerHTML =
+          `<a href="${url}" target="_blank">🎶 เปิดเพลงสำหรับอารมณ์ ${mood}</a>`;
+      });
+    }
 
-/* ---------------------------
-   LIVE LOOP
-----------------------------*/
-function liveLoop(){
-  if (!liveRunning) return;
-  processFrame().catch(e => console.error(e));
-  rafId = requestAnimationFrame(liveLoop);
-}
+    /* LOCALSTORAGE */
+    const textareas = ["happinessLinks", "sadnessLinks", "angerLinks", "neutralLinks"];
+    textareas.forEach(id => {
+      const el = document.getElementById(id);
+      el.value = localStorage.getItem(id) || "";
+      el.oninput = () => localStorage.setItem(id, el.value);
+    });
 
-/* ---------------------------
-   Start / Stop handlers
-----------------------------*/
-document.getElementById("startLive").onclick = async () => {
-  if (!modelsLoaded) {
-    alert("โมเดลยังโหลดไม่เสร็จ กรุณารอสักครู่");
-    return;
-  }
-  if (!video.srcObject) await startCamera();
-  liveRunning = true;
-  statusArea.textContent = "🔴 Live: กำลังวิเคราะห์เรียลไทม์...";
-  lastProcess = 0;
-  if (rafId) cancelAnimationFrame(rafId);
-  liveLoop();
-};
+    /* DARK MODE */
+    const darkToggle = document.getElementById("darkmodeToggle");
+    function setDarkMode(on) {
+      document.body.classList.toggle("dark", on);
+      darkToggle.textContent = on ? "☀️" : "🌙";
+      localStorage.setItem("darkMode", on);
+    }
+    setDarkMode(localStorage.getItem("darkMode") === "true");
+    darkToggle.onclick = () => setDarkMode(!document.body.classList.contains("dark"));
 
-document.getElementById("stopLive").onclick = () => {
-  liveRunning = false;
-  statusArea.textContent = "⏹ Live หยุดแล้ว";
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
-  // optional: stop camera to save resources
-  // stopCamera();
-};
+    /* 🔥 PRESET DATA */
+    const presetData = {
+      basic:{happiness:["https://youtube.com/playlist?list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"],sadness:["https://youtu.be/POETazMpykQ"],anger:["https://youtu.be/t9mCFx_zF8U"],neutral:["https://youtu.be/n61ULEU7CO0"]},
+      chill:{happiness:["https://youtu.be/xNSx7NYZ4fM"],sadness:["https://youtu.be/_c7xxwWbljk"],anger:["https://youtu.be/6m2Ma8uX74s"],neutral:["https://youtu.be/EkVbIfRPQAg"]},
+      thaipop:{happiness:["https://youtu.be/nJFJvO83o_s"],sadness:["https://youtu.be/eY7iqYmQNhE"],anger:["https://youtube.com/playlist?list=PLZSdxWoL6_WD8dpQE9iluLw3yYVQJphYp"],neutral:["https://youtu.be/aHoyTRlHCr4"]},
+      gamer:{happiness:["https://youtu.be/ih2xubMaZWI"],sadness:["https://youtu.be/M1YriKcNIco"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN"],neutral:["https://youtu.be/3fxq7kqyWO8"]}
+    };
 
-/* ---------------------------
-   SNAP + UPLOAD + DEMO
-----------------------------*/
-document.getElementById("snap").onclick = async () => {
-  if (!video || video.readyState < 2) return;
-  const c = document.createElement("canvas");
-  c.width = video.videoWidth;
-  c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
-  const img = new Image();
-  img.src = c.toDataURL();
-  img.onload = () => analyzeImage(img);
-};
+    /* 🔥 APPLY PRESET */
+    document.getElementById("applyPreset").onclick = () => {
+      const v = document.getElementById("presetSelect").value;
+      if (v === "none") return;
 
-async function analyzeImage(input) {
-  if (!modelsLoaded) { statusArea.textContent = "โมเดลยังไม่พร้อม"; return; }
-  const detection = await getFaceExpression(input);
-  if (!detection) {
-    statusArea.textContent = "ไม่พบหน้าในภาพ";
-    drawOverlay(null, null, "no face", 0);
-    return;
-  }
-  // one-shot smoothing reset to detection
-  smoothingAlpha = Number(document.getElementById("smoothingSlider").value);
-  smoothBox = { x: detection.detection.box.x, y: detection.detection.box.y, width: detection.detection.box.width, height: detection.detection.box.height };
-  smoothLandmarks = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
-  const exprObj = {};
-  for (const k of Object.keys(detection.expressions)) exprObj[k] = detection.expressions[k];
-  smoothExpression = exprObj;
+      const pack = presetData[v];
+      document.getElementById("happinessLinks").value = pack.happiness.join("\n");
+      document.getElementById("sadnessLinks").value = pack.sadness.join("\n");
+      document.getElementById("angerLinks").value = pack.anger.join("\n");
+      document.getElementById("neutralLinks").value = pack.neutral.join("\n");
 
-  // show immediate result
-  const sorted = Object.entries(smoothExpression).sort((a,b)=>b[1]-a[1]);
-  const [topRaw, topVal] = sorted[0];
-  const mapped = mapExpression(topRaw);
-  updateMoodFromSmoothed(smoothExpression);
-  drawOverlay(smoothBox, smoothLandmarks, mapped, Math.round(topVal * 100));
-  statusArea.textContent = `วิเคราะห์ภาพ: ${mapped} (${Math.round(topVal*100)}%)`;
-}
+      textareas.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
 
-document.getElementById("uploadFile").onchange = async ev => {
-  const file = ev.target.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => analyzeImage(img);
-  img.src = URL.createObjectURL(file);
-};
+      alert("โหลด Preset สำเร็จ!");
+    };
+  </script>
 
-document.getElementById("demoFace").onclick = () => {
-  const demo = new Image();
-  demo.crossOrigin="anonymous";
-  demo.src="https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/examples/images/bbt1.jpg";
-  demo.onload = () => analyzeImage(demo);
-};
-
-/* ---------------------------
-   Sliders change handling
-----------------------------*/
-const smoothingSlider = document.getElementById("smoothingSlider");
-const intervalSlider = document.getElementById("intervalSlider");
-smoothingSlider.addEventListener("input", e => {
-  smoothingAlpha = Number(e.target.value);
-  document.getElementById("smoothingVal").textContent = smoothingAlpha.toFixed(2);
-});
-intervalSlider.addEventListener("input", e => {
-  processInterval = Number(e.target.value);
-  document.getElementById("intervalVal").textContent = processInterval;
-});
-
-/* ---------------------------
-   Safety: stop camera when closed
-----------------------------*/
-window.addEventListener("beforeunload", () => {
-  stopCamera();
-});
-
-/* ---------------------------
-   Init: small timeout to ensure faceapi global is ready
-----------------------------*/
-window.addEventListener("load", async () => {
-  // ensure faceapi exists
-  if (typeof faceapi === "undefined") {
-    statusArea.textContent = "❌ faceapi ไม่ได้โหลด — ตรวจสอบการเชื่อมต่อโมเดลและ script src";
-    return;
-  }
-  // models already triggered load earlier; wait until modelsLoaded true
-  const waitModels = () => new Promise(resolve => {
-    const t = setInterval(() => {
-      if (modelsLoaded) { clearInterval(t); resolve(); }
-    }, 120);
-  });
-  await waitModels();
-  // set default smoothers (read sliders)
-  smoothingAlpha = Number(smoothingSlider.value);
-  processInterval = Number(intervalSlider.value);
-  document.getElementById("smoothingVal").textContent = smoothingAlpha.toFixed(2);
-  document.getElementById("intervalVal").textContent = processInterval;
-  statusArea.textContent = "พร้อม — กด เริ่ม Live เพื่อเริ่มการวิเคราะห์";
-});
-</script>
 </body>
 </html>
