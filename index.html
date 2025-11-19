@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Mood DJ — Enhanced Edition</title>
+<title>AI Mood DJ — Live Mood Detection</title>
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
 <!-- FACE API -->
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
-/* --- STYLING (improved, merged, cleaned) --- */
 :root{
   --bg-1:#081223;
   --bg-2:#0d1a28;
@@ -21,7 +20,7 @@
   --glass: rgba(255,255,255,0.04);
   --danger:#ff7a7a;
 }
-html,body{margin:0;height:100%;font-family:Inter,system-ui;-webkit-font-smoothing:antialiased;}
+html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue";-webkit-font-smoothing:antialiased;}
 body{
   background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
               radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
@@ -40,10 +39,17 @@ body{
 .btn{padding:10px 14px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:var(--accent-2);font-weight:600;}
 .btn.prim{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#012;}
 .btn.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.05);color:var(--muted);}
-video{width:100%;height:240px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;}
-textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-radius:10px;color:#dff7ff;}
+video{width:100%;height:240px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;display:block;}
+.canvasOverlay{position:absolute;left:0;top:0;pointer-events:none;border-radius:12px;}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;border-radius:10px;color:#dff7ff;min-height:48px;}
 .track{padding:12px;background:#ffffff06;border:1px solid #ffffff10;border-radius:12px;}
-.play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;}
+.play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;cursor:pointer;}
+.statusLine{margin-top:8px;color:var(--muted);font-size:13px;}
+.overlayContainer{position:relative;border-radius:12px;overflow:hidden;}
+.moodBadge{display:flex;align-items:center;gap:10px;}
+.moodEmoji{font-size:48px;}
+.small{font-size:12px;color:var(--muted);display:block;margin-top:8px;}
 </style>
 </head>
 
@@ -56,34 +62,41 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
       <div class="logo">DJ</div>
       <div>
         <h2 style="margin:0;font-size:20px;">AI Mood DJ</h2>
-        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชันปรับปรุงรวม Presets + Emotion AI</p>
+        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชัน Live Mood Detection — วิเคราะห์อารมณ์แบบเรียลไทม์</p>
       </div>
       <button id="openSettings" class="btn" style="margin-left:auto;">⚙️ ตั้งค่า</button>
     </div>
 
-    <div class="howto" style="margin-top:10px;color:var(--muted);font-size:13px;">
-      1) เลือก Preset → 2) ใส่เพลง → 3) ถ่าย/อัปโหลดรูป → 4) ระบบวิเคราะห์อารมณ์แบบ AI
+    <div class="howto small" style="margin-top:10px;color:var(--muted);font-size:13px;">
+      1) เลือก Preset → 2) ใส่เพลง → 3) คลิกเริ่ม Live → 4) ระบบจะแสดงอารมณ์แบบเรียลไทม์
     </div>
 
-    <video id="video" autoplay muted playsinline></video>
+    <div class="overlayContainer" style="margin-top:12px;">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="overlay" class="canvasOverlay"></canvas>
+    </div>
 
-    <div class="controls" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+    <div class="controls" style="margin-top:10px;">
       <label class="btn" for="uploadFile">📤 อัปโหลด</label>
       <input id="uploadFile" type="file" accept="image/*" style="display:none;">
       <button id="snap" class="btn prim">📸 ถ่ายภาพ</button>
       <button id="demoFace" class="btn">👁️ ตัวอย่าง</button>
+      <button id="startLive" class="btn prim">🔴 เริ่ม Live</button>
+      <button id="stopLive" class="btn ghost">⏹ หยุด Live</button>
     </div>
 
-    <div id="statusArea" style="margin-top:10px;color:var(--muted)">กำลังโหลดโมเดล...</div>
+    <div id="statusArea" class="statusLine">กำลังโหลดโมเดล...</div>
+    <div id="identityArea" class="statusLine"></div>
+    <div id="fpsArea" class="statusLine"></div>
   </section>
 
   <!-- RIGHT PANEL → MOOD RESULT -->
   <section class="stage">
     <div style="display:flex;gap:16px;align-items:center;">
-      <div id="moodEmoji" style="font-size:48px;">🙂</div>
+      <div id="moodEmoji" class="moodEmoji">🙂</div>
       <div>
         <h2 id="moodTitle" style="margin:0;">ยังไม่ได้วิเคราะห์</h2>
-        <p id="moodDesc" style="margin:0;color:var(--muted);">รอรูปภาพ...</p>
+        <p id="moodDesc" style="margin:0;color:var(--muted);">รอรูปภาพหรือกล้อง...</p>
       </div>
     </div>
 
@@ -129,19 +142,57 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
 
 <script>
 /* ---------------------------------------
-      LOAD FACE API MODELS
+      MODELS + INITIALIZATION
 --------------------------------------- */
+const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/models";
+
+const statusArea = document.getElementById("statusArea");
+const identityArea = document.getElementById("identityArea");
+const fpsArea = document.getElementById("fpsArea");
+const video = document.getElementById("video");
+const overlay = document.getElementById("overlay");
+const overlayCtx = overlay.getContext("2d");
+
+let modelsLoaded = false;
+let liveRunning = false;
+let lastProcess = 0;
+let processInterval = 400; // ms between analyzes
+let lastFPSupdate = Date.now();
+let framesCount = 0;
+
 async function loadModels() {
-  const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/models";
-  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-  await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-  document.getElementById("statusArea").textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
+  statusArea.textContent = "กำลังโหลดโมเดล face-api.js ...";
+  try {
+    // detection + landmarks + expressions + optional recognition
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+    // optional: face recognition net is available if needed later
+    // await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    modelsLoaded = true;
+    statusArea.textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
+  } catch (e) {
+    console.error(e);
+    statusArea.textContent = "❌ โหลดโมเดลล้มเหลว: " + e.message;
+  }
 }
 loadModels();
 
 /* CAMERA */
-navigator.mediaDevices.getUserMedia({ video:true }).then(stream => video.srcObject = stream);
+async function startCamera(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    // sync overlay size
+    overlay.width = video.videoWidth || 640;
+    overlay.height = video.videoHeight || 360;
+  } catch (e) {
+    console.error("Camera error:", e);
+    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้: " + e.message;
+  }
+}
+startCamera();
 
 /* PRESET DATA */
 const ids = ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
@@ -184,13 +235,13 @@ document.getElementById("closeDrawer").onclick = ()=> drawer.style.transform="tr
 /* UTIL */
 function getRandom(id){
   const list = (document.getElementById(id).value || "")
-    .split("\n").filter(Boolean);
+    .split("\n").map(s=>s.trim()).filter(Boolean);
   return list[Math.floor(Math.random()*list.length)];
 }
 
 function updateMood(mood,conf){
-  document.getElementById("moodTitle").textContent = mood;
-  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: "+conf+"%";
+  document.getElementById("moodTitle").textContent = mood ? mood : "neutral";
+  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: "+(conf||0)+"%";
   const emo = { happiness:"😄", sadness:"😢", anger:"😡", neutral:"😐" };
   document.getElementById("moodEmoji").textContent = emo[mood]||"🙂";
 
@@ -206,74 +257,208 @@ function updateMood(mood,conf){
   grid.innerHTML = "";
 
   if(link){
-    grid.innerHTML = `
-      <div class="track">
-        <div>${link}</div>
-        <button class="play-btn" onclick="window.open('${link}')">▶️ เล่น</button>
-      </div>`;
+    const div = document.createElement("div");
+    div.className = "track";
+    div.innerHTML = `
+      <div style="font-size:13px;word-break:break-all">${link}</div>
+      <button class="play-btn">▶️ เล่น</button>`;
+    const btn = div.querySelector("button");
+    btn.onclick = ()=> window.open(link, "_blank");
+    grid.appendChild(div);
   }
 }
 
 /* ---------------------------------------
-      EMOTION ANALYSIS
+      FACE EXPRESSION API (single function)
 --------------------------------------- */
-async function analyzeImage(input){
+async function getFaceExpression(input) {
+  // detection options tuned for speed
+  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
   const detection = await faceapi
-    .detectSingleFace(input, new faceapi.TinyFaceDetectorOptions())
+    .detectSingleFace(input, options)
     .withFaceLandmarks()
     .withFaceExpressions();
 
-  if(!detection){
-    updateMood("neutral",0);
-    document.getElementById("statusArea").textContent="ไม่พบหน้า";
-    return;
+  if (!detection) {
+    return {
+      expression: "neutral",
+      confidence: 0,
+      raw: null,
+      detection: null
+    };
   }
 
   const exp = detection.expressions;
-  const sorted = Object.entries(exp).sort((a,b)=>b[1]-a[1]);
-  const [topMood, confidence] = sorted[0];
+  const sorted = Object.entries(exp).sort((a, b) => b[1] - a[1]);
+  const [top, conf] = sorted[0];
 
-  const map = {
-    happy:"happiness",
-    sad:"sadness",
-    angry:"anger",
-    neutral:"neutral",
-    surprised:"happiness",
-    disgusted:"anger",
-    fearful:"sadness"
+  const convert = {
+    happy: "happiness",
+    sad: "sadness",
+    angry: "anger",
+    disgusted: "anger",
+    fearful: "sadness",
+    surprised: "happiness",
+    neutral: "neutral"
   };
 
-  const mood = map[topMood] || "neutral";
-  updateMood(mood,Math.round(confidence*100));
-  document.getElementById("statusArea").textContent="วิเคราะห์สำเร็จ ✓";
+  return {
+    expression: convert[top] || "neutral",
+    confidence: Math.round(conf * 100),
+    raw: exp,
+    detection
+  };
 }
 
-/* SNAP CAMERA */
-document.getElementById("snap").onclick = async ()=>{
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video,0,0);
-  analyzeImage(canvas);
+/* ---------------------------------------
+      LIVE LOOP (throttled) + DRAWING
+--------------------------------------- */
+async function processFrame() {
+  if (!modelsLoaded || !video || video.readyState < 2) return;
+
+  const now = Date.now();
+  if (now - lastProcess < processInterval) return; // throttle
+  lastProcess = now;
+
+  // prepare a small canvas to analyze
+  // we can pass video element directly to face-api
+  const res = await getFaceExpression(video);
+
+  // update UI
+  updateMood(res.expression, res.confidence);
+
+  // draw overlay
+  overlay.width = video.videoWidth;
+  overlay.height = video.videoHeight;
+  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+
+  if (res.detection && res.detection.detection) {
+    const box = res.detection.detection.box;
+    overlayCtx.lineWidth = Math.max(2, Math.round(overlay.width/300));
+    overlayCtx.strokeStyle = "rgba(90,170,255,0.9)";
+    overlayCtx.fillStyle = "rgba(10,10,10,0.45)";
+    overlayCtx.beginPath();
+    overlayCtx.rect(box.x, box.y, box.width, box.height);
+    overlayCtx.stroke();
+
+    // label background
+    const label = `${res.expression} (${res.confidence}%)`;
+    overlayCtx.font = `${Math.max(12, Math.round(overlay.width/60))}px sans-serif`;
+    const textW = overlayCtx.measureText(label).width;
+    const pad = 6;
+    overlayCtx.fillRect(box.x, box.y - 30, textW + pad*2, 28);
+
+    overlayCtx.fillStyle = "#fff";
+    overlayCtx.fillText(label, box.x + pad, box.y - 10);
+  } else {
+    // no face found
+    overlayCtx.fillStyle = "rgba(255,255,255,0.03)";
+    overlayCtx.font = "14px sans-serif";
+    overlayCtx.fillText("ไม่พบใบหน้า", 10, 20);
+  }
+
+  // fps counter (simple)
+  framesCount++;
+  if (Date.now() - lastFPSupdate > 1000) {
+    fpsArea.textContent = `FPS (ตรวจ): ${framesCount} /s`;
+    framesCount = 0;
+    lastFPSupdate = Date.now();
+  }
+}
+
+/* start/stop live */
+let rafId = null;
+function liveLoop(){
+  if (!liveRunning) return;
+  processFrame().catch(e=>console.error(e));
+  rafId = requestAnimationFrame(liveLoop);
+}
+
+document.getElementById("startLive").onclick = ()=>{
+  if (!modelsLoaded) {
+    alert("โมเดลยังโหลดไม่เสร็จ กรุณารอสักครู่");
+    return;
+  }
+  liveRunning = true;
+  statusArea.textContent = "🔴 Live: กำลังวิเคราะห์เรียลไทม์...";
+  lastProcess = 0;
+  if (!video.srcObject) startCamera();
+  if (rafId) cancelAnimationFrame(rafId);
+  liveLoop();
 };
 
-/* UPLOAD */
+document.getElementById("stopLive").onclick = ()=>{
+  liveRunning = false;
+  statusArea.textContent = "⏹ Live หยุดแล้ว";
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+};
+
+/* ---------------------------------------
+      SNAP + UPLOAD + DEMO
+--------------------------------------- */
+document.getElementById("snap").onclick = async ()=>{
+  // create canvas from video
+  const c = document.createElement("canvas");
+  c.width = video.videoWidth;
+  c.height = video.videoHeight;
+  c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
+  const img = new Image();
+  img.src = c.toDataURL();
+  img.onload = ()=> analyzeImage(img);
+};
+
+async function analyzeImage(input) {
+  if (!modelsLoaded) { statusArea.textContent = "โมเดลยังไม่พร้อม"; return; }
+  const r = await getFaceExpression(input);
+  updateMood(r.expression, r.confidence);
+  statusArea.textContent = "วิเคราะห์ภาพ: " + r.expression + " (" + r.confidence + "%)";
+  // draw result once
+  overlay.width = input.width || video.videoWidth;
+  overlay.height = input.height || video.videoHeight;
+  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+  if (r.detection && r.detection.detection) {
+    const b = r.detection.detection.box;
+    overlayCtx.lineWidth = 2;
+    overlayCtx.strokeStyle = "rgba(90,170,255,0.9)";
+    overlayCtx.strokeRect(b.x, b.y, b.width, b.height);
+    overlayCtx.font = "16px sans-serif";
+    overlayCtx.fillStyle = "rgba(10,10,10,0.6)";
+    overlayCtx.fillRect(b.x, b.y - 26, 120, 22);
+    overlayCtx.fillStyle = "#fff";
+    overlayCtx.fillText(`${r.expression} (${r.confidence}%)`, b.x + 6, b.y - 8);
+  }
+}
+
 document.getElementById("uploadFile").onchange = async ev=>{
   const file = ev.target.files[0];
   if(!file) return;
-
   const img = new Image();
   img.onload = ()=> analyzeImage(img);
   img.src = URL.createObjectURL(file);
 };
 
-/* DEMO */
 document.getElementById("demoFace").onclick = ()=>{
   const demo = new Image();
   demo.crossOrigin="anonymous";
   demo.src="https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/examples/images/bbt1.jpg";
   demo.onload = ()=> analyzeImage(demo);
 };
+
+/* ---------------------------------------
+      OPTIONAL: adjust interval slider (quick hack)
+--------------------------------------- */
+const drawer = document.getElementById("drawer");
+const idsInputs = ids.map(id=>document.getElementById(id));
+loadSaved();
+
+/* small safety: stop camera on page unload */
+window.addEventListener("beforeunload", ()=>{
+  if (video.srcObject) {
+    const tracks = video.srcObject.getTracks();
+    tracks.forEach(t => t.stop());
+  }
+});
 </script>
 
 </body>
