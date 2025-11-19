@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Mood DJ — Live Mood Detection</title>
+<title>AI Mood DJ — Stable Live Mood Detection</title>
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-<!-- FACE API -->
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<!-- IMPORTANT: Load face-api.js FIRST (no defer) -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
 :root{
@@ -25,11 +25,11 @@ body{
   background: radial-gradient(1200px 600px at 10% 10%, #0b2b3a 0%, transparent 10%),
               radial-gradient(900px 500px at 90% 90%, #07203a 0%, transparent 10%),
               linear-gradient(180deg,var(--bg-1),var(--bg-2));
-  padding:28px;
+  padding:24px;
   display:flex;justify-content:center;align-items:flex-start;
   color:#d8eef7;
 }
-.app{width:100%;max-width:1100px;display:grid;grid-template-columns:420px 1fr;gap:22px;}
+.app{width:100%;max-width:1120px;display:grid;grid-template-columns:430px 1fr;gap:20px;}
 .panel, .stage{
   background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
   border:1px solid rgba(255,255,255,0.05);
@@ -39,7 +39,7 @@ body{
 .btn{padding:10px 14px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:var(--accent-2);font-weight:600;}
 .btn.prim{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#012;}
 .btn.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.05);color:var(--muted);}
-video{width:100%;height:240px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;display:block;}
+video{width:100%;height:260px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.05);background:#0005;display:block;}
 .canvasOverlay{position:absolute;left:0;top:0;pointer-events:none;border-radius:12px;}
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;border-radius:10px;color:#dff7ff;min-height:48px;}
@@ -47,9 +47,10 @@ textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;bor
 .play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;cursor:pointer;}
 .statusLine{margin-top:8px;color:var(--muted);font-size:13px;}
 .overlayContainer{position:relative;border-radius:12px;overflow:hidden;}
-.moodBadge{display:flex;align-items:center;gap:10px;}
 .moodEmoji{font-size:48px;}
 .small{font-size:12px;color:var(--muted);display:block;margin-top:8px;}
+.slider{width:100%}
+.footerNote{font-size:12px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 
@@ -62,13 +63,13 @@ textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;bor
       <div class="logo">DJ</div>
       <div>
         <h2 style="margin:0;font-size:20px;">AI Mood DJ</h2>
-        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชัน Live Mood Detection — วิเคราะห์อารมณ์แบบเรียลไทม์</p>
+        <p style="margin:0;color:var(--muted);font-size:13px;">Live Detection (smoothing, landmarks)</p>
       </div>
       <button id="openSettings" class="btn" style="margin-left:auto;">⚙️ ตั้งค่า</button>
     </div>
 
-    <div class="howto small" style="margin-top:10px;color:var(--muted);font-size:13px;">
-      1) เลือก Preset → 2) ใส่เพลง → 3) คลิกเริ่ม Live → 4) ระบบจะแสดงอารมณ์แบบเรียลไทม์
+    <div class="howto small" style="margin-top:10px;color:var(--muted);">
+      1) โหลด Preset → 2) กด "เริ่ม Live" → 3) ระบบจะแสดงอารมณ์แบบเรียลไทม์ (นุ่มขึ้น)
     </div>
 
     <div class="overlayContainer" style="margin-top:12px;">
@@ -85,9 +86,16 @@ textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;bor
       <button id="stopLive" class="btn ghost">⏹ หยุด Live</button>
     </div>
 
-    <div id="statusArea" class="statusLine">กำลังโหลดโมเดล...</div>
-    <div id="identityArea" class="statusLine"></div>
+    <div id="statusArea" class="statusLine">กำลังเตรียมตัว...</div>
     <div id="fpsArea" class="statusLine"></div>
+
+    <div style="margin-top:12px;">
+      <label class="small">Smoothing (0 = no smoothing, 0.9 = very smooth): <span id="smoothingVal">0.35</span></label>
+      <input id="smoothingSlider" class="slider" type="range" min="0" max="0.9" step="0.01" value="0.35">
+      <label class="small" style="margin-top:8px;">Process interval (ms): <span id="intervalVal">300</span></label>
+      <input id="intervalSlider" class="slider" type="range" min="80" max="1000" step="20" value="300">
+      <div class="footerNote">หมายเหตุ: ลดค่า interval จะเร็วขึ้นแต่ใช้ CPU มากขึ้น</div>
+    </div>
   </section>
 
   <!-- RIGHT PANEL → MOOD RESULT -->
@@ -141,58 +149,29 @@ textarea{width:100%;background:#0004;border:1px solid #ffffff10;padding:10px;bor
 </aside>
 
 <script>
-/* ---------------------------------------
-      MODELS + INITIALIZATION
---------------------------------------- */
+/* ---------------------------
+   CONFIG & STATE
+----------------------------*/
 const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/models";
-
-const statusArea = document.getElementById("statusArea");
-const identityArea = document.getElementById("identityArea");
-const fpsArea = document.getElementById("fpsArea");
 const video = document.getElementById("video");
 const overlay = document.getElementById("overlay");
 const overlayCtx = overlay.getContext("2d");
+const statusArea = document.getElementById("statusArea");
+const fpsArea = document.getElementById("fpsArea");
 
 let modelsLoaded = false;
 let liveRunning = false;
+let rafId = null;
 let lastProcess = 0;
-let processInterval = 400; // ms between analyzes
+let processInterval = Number(document.getElementById("intervalSlider").value) || 300;
+let smoothingAlpha = Number(document.getElementById("smoothingSlider").value) || 0.35;
+
+// EMA-smoothed state
+let smoothBox = null;        // {x,y,width,height}
+let smoothExpression = null; // {happiness:val, sadness:val,...}
+let smoothLandmarks = null;  // array of points
 let lastFPSupdate = Date.now();
 let framesCount = 0;
-
-async function loadModels() {
-  statusArea.textContent = "กำลังโหลดโมเดล face-api.js ...";
-  try {
-    // detection + landmarks + expressions + optional recognition
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-    // optional: face recognition net is available if needed later
-    // await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-    modelsLoaded = true;
-    statusArea.textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
-  } catch (e) {
-    console.error(e);
-    statusArea.textContent = "❌ โหลดโมเดลล้มเหลว: " + e.message;
-  }
-}
-loadModels();
-
-/* CAMERA */
-async function startCamera(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-    video.srcObject = stream;
-    await video.play();
-    // sync overlay size
-    overlay.width = video.videoWidth || 640;
-    overlay.height = video.videoHeight || 360;
-  } catch (e) {
-    console.error("Camera error:", e);
-    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้: " + e.message;
-  }
-}
-startCamera();
 
 /* PRESET DATA */
 const ids = ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
@@ -203,13 +182,14 @@ const presetData = {
   gamer:{happiness:["https://youtu.be/ih2xubMaZWI"],sadness:["https://youtu.be/M1YriKcNIco"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN"],neutral:["https://youtu.be/3fxq7kqyWO8"]}
 };
 
-/* LOAD SAVED */
+/* ---------------------------
+   UTIL / Preset UI
+----------------------------*/
 function loadSaved() {
   ids.forEach(id => document.getElementById(id).value = localStorage.getItem(id) || "");
 }
 loadSaved();
 
-/* APPLY PRESET */
 function applyPreset(key){
   const p = presetData[key];
   if(!p) return;
@@ -218,80 +198,114 @@ function applyPreset(key){
   document.getElementById("angerLinks").value = p.anger.join("\n");
   document.getElementById("neutralLinks").value = p.neutral.join("\n");
 }
-
 document.getElementById("applyPreset").onclick = () => {
   const v = document.getElementById("presetSelect").value;
   if(v !== "none") applyPreset(v);
 };
-
 document.getElementById("saveSettings").onclick = () => {
   ids.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
   drawer.style.transform = "translateX(420px)";
 };
-
 document.getElementById("openSettings").onclick = ()=> drawer.style.transform="translateX(0)";
 document.getElementById("closeDrawer").onclick = ()=> drawer.style.transform="translateX(420px)";
 
-/* UTIL */
-function getRandom(id){
-  const list = (document.getElementById(id).value || "")
-    .split("\n").map(s=>s.trim()).filter(Boolean);
-  return list[Math.floor(Math.random()*list.length)];
-}
-
-function updateMood(mood,conf){
-  document.getElementById("moodTitle").textContent = mood ? mood : "neutral";
-  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: "+(conf||0)+"%";
-  const emo = { happiness:"😄", sadness:"😢", anger:"😡", neutral:"😐" };
-  document.getElementById("moodEmoji").textContent = emo[mood]||"🙂";
-
-  let field = {
-    happiness:"happinessLinks",
-    sadness:"sadnessLinks",
-    anger:"angerLinks",
-    neutral:"neutralLinks"
-  }[mood];
-
-  const link = getRandom(field);
-  const grid = document.getElementById("tracksGrid");
-  grid.innerHTML = "";
-
-  if(link){
-    const div = document.createElement("div");
-    div.className = "track";
-    div.innerHTML = `
-      <div style="font-size:13px;word-break:break-all">${link}</div>
-      <button class="play-btn">▶️ เล่น</button>`;
-    const btn = div.querySelector("button");
-    btn.onclick = ()=> window.open(link, "_blank");
-    grid.appendChild(div);
+/* ---------------------------
+   MODEL LOADING
+----------------------------*/
+async function loadModels() {
+  statusArea.textContent = "กำลังโหลดโมเดล face-api.js ...";
+  try {
+    // detection + landmarks + expressions
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+    modelsLoaded = true;
+    statusArea.textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
+  } catch (e) {
+    console.error(e);
+    statusArea.textContent = "❌ โหลดโมเดลล้มเหลว: " + (e.message || e);
   }
 }
+loadModels();
 
-/* ---------------------------------------
-      FACE EXPRESSION API (single function)
---------------------------------------- */
+/* ---------------------------
+   CAMERA
+----------------------------*/
+async function startCamera(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    // sync overlay size
+    resizeOverlay();
+    video.addEventListener("loadedmetadata", resizeOverlay);
+    window.addEventListener("resize", resizeOverlay);
+  } catch (e) {
+    console.error("Camera error:", e);
+    statusArea.textContent = "ไม่สามารถเข้าถึงกล้องได้: " + e.message;
+  }
+}
+function stopCamera(){
+  if (video.srcObject) {
+    const tracks = video.srcObject.getTracks();
+    tracks.forEach(t => t.stop());
+    video.srcObject = null;
+  }
+}
+function resizeOverlay(){
+  overlay.width = video.videoWidth || 640;
+  overlay.height = video.videoHeight || 360;
+  overlay.style.width = video.offsetWidth + "px";
+  overlay.style.height = video.offsetHeight + "px";
+}
+
+/* ---------------------------
+   FACE EXPRESSION API (single function)
+   - returns detection, expressions, landmarks
+----------------------------*/
 async function getFaceExpression(input) {
-  // detection options tuned for speed
+  if (!modelsLoaded) return null;
   const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
   const detection = await faceapi
     .detectSingleFace(input, options)
     .withFaceLandmarks()
     .withFaceExpressions();
 
-  if (!detection) {
-    return {
-      expression: "neutral",
-      confidence: 0,
-      raw: null,
-      detection: null
-    };
+  if (!detection) return null;
+
+  return detection; // contains detection, landmarks, expressions
+}
+
+/* ---------------------------
+   SMOOTHING HELPERS (EMA)
+----------------------------*/
+function ema(prev, curr, alpha) {
+  if (prev == null) return curr;
+  // both objects: numeric props
+  if (typeof prev === "object" && typeof curr === "object") {
+    const out = Array.isArray(curr) ? [] : {};
+    if (Array.isArray(curr)) {
+      for (let i = 0; i < curr.length; i++) {
+        if (typeof curr[i] === "number") out[i] = prev[i] * (1 - alpha) + curr[i] * alpha;
+        else out[i] = curr[i]; // fallback
+      }
+    } else {
+      for (const k of Object.keys(curr)) {
+        if (typeof curr[k] === "number") out[k] = prev[k] * (1 - alpha) + curr[k] * alpha;
+        else out[k] = curr[k];
+      }
+    }
+    return out;
   }
+  // numbers
+  if (typeof curr === "number") return prev * (1 - alpha) + curr * alpha;
+  return curr;
+}
 
-  const exp = detection.expressions;
-  const sorted = Object.entries(exp).sort((a, b) => b[1] - a[1]);
-  const [top, conf] = sorted[0];
-
+/* ---------------------------
+   Convert expressions mapping
+----------------------------*/
+function mapExpression(rawName) {
   const convert = {
     happy: "happiness",
     sad: "sadness",
@@ -301,63 +315,152 @@ async function getFaceExpression(input) {
     surprised: "happiness",
     neutral: "neutral"
   };
-
-  return {
-    expression: convert[top] || "neutral",
-    confidence: Math.round(conf * 100),
-    raw: exp,
-    detection
-  };
+  return convert[rawName] || "neutral";
 }
 
-/* ---------------------------------------
-      LIVE LOOP (throttled) + DRAWING
---------------------------------------- */
-async function processFrame() {
-  if (!modelsLoaded || !video || video.readyState < 2) return;
+/* ---------------------------
+   UPDATE MOOD UI & music recommendation
+----------------------------*/
+function getRandom(id){
+  const list = (document.getElementById(id).value || "")
+    .split("\n").map(s=>s.trim()).filter(Boolean);
+  return list[Math.floor(Math.random()*list.length)];
+}
 
-  const now = Date.now();
-  if (now - lastProcess < processInterval) return; // throttle
-  lastProcess = now;
+function updateMoodFromSmoothed(expObj) {
+  // expObj: {happy:0.5, sad:0.1, ...} (smoothed raw values)
+  // Determine top original label
+  const entries = Object.entries(expObj);
+  entries.sort((a,b)=>b[1]-a[1]);
+  const [rawTop, rawVal] = entries[0];
+  const mapped = mapExpression(rawTop);
+  const confPercent = Math.round(rawVal * 100);
+  document.getElementById("moodTitle").textContent = mapped;
+  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: " + confPercent + "%";
+  const emo = { happiness:"😄", sadness:"😢", anger:"😡", neutral:"😐" };
+  document.getElementById("moodEmoji").textContent = emo[mapped] || "🙂";
 
-  // prepare a small canvas to analyze
-  // we can pass video element directly to face-api
-  const res = await getFaceExpression(video);
+  // recommend track
+  let field = {
+    happiness:"happinessLinks",
+    sadness:"sadnessLinks",
+    anger:"angerLinks",
+    neutral:"neutralLinks"
+  }[mapped];
 
-  // update UI
-  updateMood(res.expression, res.confidence);
+  const link = getRandom(field);
+  const grid = document.getElementById("tracksGrid");
+  grid.innerHTML = "";
+  if (link){
+    const div = document.createElement("div");
+    div.className = "track";
+    div.innerHTML = `
+      <div style="font-size:13px;word-break:break-all">${link}</div>
+      <button class="play-btn">▶️ เล่น</button>`;
+    div.querySelector("button").onclick = ()=> window.open(link, "_blank");
+    grid.appendChild(div);
+  }
+}
 
-  // draw overlay
-  overlay.width = video.videoWidth;
-  overlay.height = video.videoHeight;
+/* ---------------------------
+   DRAWING: box + landmarks
+----------------------------*/
+function drawOverlay(box, landmarks, expressionLabel, confPercent) {
   overlayCtx.clearRect(0,0,overlay.width,overlay.height);
 
-  if (res.detection && res.detection.detection) {
-    const box = res.detection.detection.box;
-    overlayCtx.lineWidth = Math.max(2, Math.round(overlay.width/300));
-    overlayCtx.strokeStyle = "rgba(90,170,255,0.9)";
+  if (box) {
+    // box: {x,y,width,height}
+    const lineW = Math.max(2, Math.round(overlay.width / 260));
+    overlayCtx.lineWidth = lineW;
+    overlayCtx.strokeStyle = "rgba(90,170,255,0.95)";
     overlayCtx.fillStyle = "rgba(10,10,10,0.45)";
     overlayCtx.beginPath();
     overlayCtx.rect(box.x, box.y, box.width, box.height);
     overlayCtx.stroke();
 
-    // label background
-    const label = `${res.expression} (${res.confidence}%)`;
+    // label
+    const label = `${expressionLabel} (${confPercent}%)`;
     overlayCtx.font = `${Math.max(12, Math.round(overlay.width/60))}px sans-serif`;
     const textW = overlayCtx.measureText(label).width;
     const pad = 6;
-    overlayCtx.fillRect(box.x, box.y - 30, textW + pad*2, 28);
-
+    const lx = box.x;
+    let ly = box.y - (overlay.height * 0.03) - 10;
+    if (ly < 0) ly = box.y + box.height + 6;
+    overlayCtx.fillStyle = "rgba(10,10,10,0.6)";
+    overlayCtx.fillRect(lx - 2, ly - 22, textW + pad*2 + 4, 24);
     overlayCtx.fillStyle = "#fff";
-    overlayCtx.fillText(label, box.x + pad, box.y - 10);
-  } else {
-    // no face found
-    overlayCtx.fillStyle = "rgba(255,255,255,0.03)";
-    overlayCtx.font = "14px sans-serif";
-    overlayCtx.fillText("ไม่พบใบหน้า", 10, 20);
+    overlayCtx.fillText(label, lx + pad, ly - 6);
   }
 
-  // fps counter (simple)
+  if (landmarks && landmarks.length) {
+    overlayCtx.fillStyle = "rgba(255,255,255,0.95)";
+    const r = Math.max(1, Math.round(overlay.width / 400));
+    for (const p of landmarks) {
+      overlayCtx.beginPath();
+      overlayCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      overlayCtx.fill();
+    }
+  }
+}
+
+/* ---------------------------
+   PROCESS FRAME (throttled by processInterval)
+   - get detection
+   - smooth box, expressions, landmarks
+   - update UI + draw
+----------------------------*/
+async function processFrame() {
+  if (!modelsLoaded || !video || video.readyState < 2) return;
+  const now = Date.now();
+  if (now - lastProcess < processInterval) return;
+  lastProcess = now;
+
+  const detection = await getFaceExpression(video);
+  if (!detection) {
+    // fade to neutral slowly by EMA toward neutral values
+    if (smoothExpression) {
+      // target neutral: all zeros except neutral -> 1? We'll nudge toward small neutral
+      const target = {};
+      for (const k of Object.keys(smoothExpression)) target[k] = 0;
+      if ('neutral' in smoothExpression) target['neutral'] = 1;
+      smoothExpression = ema(smoothExpression, target, smoothingAlpha * 0.5);
+      updateMoodFromSmoothed(smoothExpression);
+    }
+    drawOverlay(null, null, "no face", 0);
+    return;
+  }
+
+  // raw components
+  const boxRaw = detection.detection.box;
+  const landmarksRaw = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
+  const expressionsRaw = detection.expressions; // object with keys: happy, sad, etc.
+
+  // smoothing
+  // box as object
+  const boxObj = { x: boxRaw.x, y: boxRaw.y, width: boxRaw.width, height: boxRaw.height };
+  smoothBox = ema(smoothBox, boxObj, smoothingAlpha);
+
+  // expressions: ensure consistent keys order
+  const normExp = { neutral:0, happy:0, sad:0, angry:0, surprised:0, disgusted:0, fearful:0 };
+  for (const k of Object.keys(expressionsRaw)) normExp[k] = expressionsRaw[k];
+  smoothExpression = ema(smoothExpression, normExp, smoothingAlpha);
+
+  // landmarks: array of points
+  smoothLandmarks = ema(smoothLandmarks, landmarksRaw, smoothingAlpha);
+
+  // find top expression from smoothed raw (not mapped yet)
+  const sorted = Object.entries(smoothExpression).sort((a,b)=>b[1]-a[1]);
+  const [topRaw, topVal] = sorted[0];
+  const mapped = mapExpression(topRaw);
+  const confPercent = Math.round(topVal * 100);
+
+  // update UI
+  updateMoodFromSmoothed(smoothExpression);
+
+  // draw overlay using smoothed box & landmarks
+  drawOverlay(smoothBox, smoothLandmarks, mapped, confPercent);
+
+  // fps counter
   framesCount++;
   if (Date.now() - lastFPSupdate > 1000) {
     fpsArea.textContent = `FPS (ตรวจ): ${framesCount} /s`;
@@ -366,100 +469,138 @@ async function processFrame() {
   }
 }
 
-/* start/stop live */
-let rafId = null;
+/* ---------------------------
+   LIVE LOOP
+----------------------------*/
 function liveLoop(){
   if (!liveRunning) return;
-  processFrame().catch(e=>console.error(e));
+  processFrame().catch(e => console.error(e));
   rafId = requestAnimationFrame(liveLoop);
 }
 
-document.getElementById("startLive").onclick = ()=>{
+/* ---------------------------
+   Start / Stop handlers
+----------------------------*/
+document.getElementById("startLive").onclick = async () => {
   if (!modelsLoaded) {
     alert("โมเดลยังโหลดไม่เสร็จ กรุณารอสักครู่");
     return;
   }
+  if (!video.srcObject) await startCamera();
   liveRunning = true;
   statusArea.textContent = "🔴 Live: กำลังวิเคราะห์เรียลไทม์...";
   lastProcess = 0;
-  if (!video.srcObject) startCamera();
   if (rafId) cancelAnimationFrame(rafId);
   liveLoop();
 };
 
-document.getElementById("stopLive").onclick = ()=>{
+document.getElementById("stopLive").onclick = () => {
   liveRunning = false;
   statusArea.textContent = "⏹ Live หยุดแล้ว";
   if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   overlayCtx.clearRect(0,0,overlay.width,overlay.height);
+  // optional: stop camera to save resources
+  // stopCamera();
 };
 
-/* ---------------------------------------
-      SNAP + UPLOAD + DEMO
---------------------------------------- */
-document.getElementById("snap").onclick = async ()=>{
-  // create canvas from video
+/* ---------------------------
+   SNAP + UPLOAD + DEMO
+----------------------------*/
+document.getElementById("snap").onclick = async () => {
+  if (!video || video.readyState < 2) return;
   const c = document.createElement("canvas");
   c.width = video.videoWidth;
   c.height = video.videoHeight;
   c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
   const img = new Image();
   img.src = c.toDataURL();
-  img.onload = ()=> analyzeImage(img);
+  img.onload = () => analyzeImage(img);
 };
 
 async function analyzeImage(input) {
   if (!modelsLoaded) { statusArea.textContent = "โมเดลยังไม่พร้อม"; return; }
-  const r = await getFaceExpression(input);
-  updateMood(r.expression, r.confidence);
-  statusArea.textContent = "วิเคราะห์ภาพ: " + r.expression + " (" + r.confidence + "%)";
-  // draw result once
-  overlay.width = input.width || video.videoWidth;
-  overlay.height = input.height || video.videoHeight;
-  overlayCtx.clearRect(0,0,overlay.width,overlay.height);
-  if (r.detection && r.detection.detection) {
-    const b = r.detection.detection.box;
-    overlayCtx.lineWidth = 2;
-    overlayCtx.strokeStyle = "rgba(90,170,255,0.9)";
-    overlayCtx.strokeRect(b.x, b.y, b.width, b.height);
-    overlayCtx.font = "16px sans-serif";
-    overlayCtx.fillStyle = "rgba(10,10,10,0.6)";
-    overlayCtx.fillRect(b.x, b.y - 26, 120, 22);
-    overlayCtx.fillStyle = "#fff";
-    overlayCtx.fillText(`${r.expression} (${r.confidence}%)`, b.x + 6, b.y - 8);
+  const detection = await getFaceExpression(input);
+  if (!detection) {
+    statusArea.textContent = "ไม่พบหน้าในภาพ";
+    drawOverlay(null, null, "no face", 0);
+    return;
   }
+  // one-shot smoothing reset to detection
+  smoothingAlpha = Number(document.getElementById("smoothingSlider").value);
+  smoothBox = { x: detection.detection.box.x, y: detection.detection.box.y, width: detection.detection.box.width, height: detection.detection.box.height };
+  smoothLandmarks = detection.landmarks.positions.map(p => ({ x: p.x, y: p.y }));
+  const exprObj = {};
+  for (const k of Object.keys(detection.expressions)) exprObj[k] = detection.expressions[k];
+  smoothExpression = exprObj;
+
+  // show immediate result
+  const sorted = Object.entries(smoothExpression).sort((a,b)=>b[1]-a[1]);
+  const [topRaw, topVal] = sorted[0];
+  const mapped = mapExpression(topRaw);
+  updateMoodFromSmoothed(smoothExpression);
+  drawOverlay(smoothBox, smoothLandmarks, mapped, Math.round(topVal * 100));
+  statusArea.textContent = `วิเคราะห์ภาพ: ${mapped} (${Math.round(topVal*100)}%)`;
 }
 
-document.getElementById("uploadFile").onchange = async ev=>{
+document.getElementById("uploadFile").onchange = async ev => {
   const file = ev.target.files[0];
-  if(!file) return;
+  if (!file) return;
   const img = new Image();
-  img.onload = ()=> analyzeImage(img);
+  img.onload = () => analyzeImage(img);
   img.src = URL.createObjectURL(file);
 };
 
-document.getElementById("demoFace").onclick = ()=>{
+document.getElementById("demoFace").onclick = () => {
   const demo = new Image();
   demo.crossOrigin="anonymous";
   demo.src="https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/examples/images/bbt1.jpg";
-  demo.onload = ()=> analyzeImage(demo);
+  demo.onload = () => analyzeImage(demo);
 };
 
-/* ---------------------------------------
-      OPTIONAL: adjust interval slider (quick hack)
---------------------------------------- */
-const drawer = document.getElementById("drawer");
-const idsInputs = ids.map(id=>document.getElementById(id));
-loadSaved();
+/* ---------------------------
+   Sliders change handling
+----------------------------*/
+const smoothingSlider = document.getElementById("smoothingSlider");
+const intervalSlider = document.getElementById("intervalSlider");
+smoothingSlider.addEventListener("input", e => {
+  smoothingAlpha = Number(e.target.value);
+  document.getElementById("smoothingVal").textContent = smoothingAlpha.toFixed(2);
+});
+intervalSlider.addEventListener("input", e => {
+  processInterval = Number(e.target.value);
+  document.getElementById("intervalVal").textContent = processInterval;
+});
 
-/* small safety: stop camera on page unload */
-window.addEventListener("beforeunload", ()=>{
-  if (video.srcObject) {
-    const tracks = video.srcObject.getTracks();
-    tracks.forEach(t => t.stop());
+/* ---------------------------
+   Safety: stop camera when closed
+----------------------------*/
+window.addEventListener("beforeunload", () => {
+  stopCamera();
+});
+
+/* ---------------------------
+   Init: small timeout to ensure faceapi global is ready
+----------------------------*/
+window.addEventListener("load", async () => {
+  // ensure faceapi exists
+  if (typeof faceapi === "undefined") {
+    statusArea.textContent = "❌ faceapi ไม่ได้โหลด — ตรวจสอบการเชื่อมต่อโมเดลและ script src";
+    return;
   }
+  // models already triggered load earlier; wait until modelsLoaded true
+  const waitModels = () => new Promise(resolve => {
+    const t = setInterval(() => {
+      if (modelsLoaded) { clearInterval(t); resolve(); }
+    }, 120);
+  });
+  await waitModels();
+  // set default smoothers (read sliders)
+  smoothingAlpha = Number(smoothingSlider.value);
+  processInterval = Number(intervalSlider.value);
+  document.getElementById("smoothingVal").textContent = smoothingAlpha.toFixed(2);
+  document.getElementById("intervalVal").textContent = processInterval;
+  statusArea.textContent = "พร้อม — กด เริ่ม Live เพื่อเริ่มการวิเคราะห์";
 });
 </script>
-
 </body>
 </html>
