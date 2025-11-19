@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>AI Mood DJ — Enhanced Edition</title>
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+<!-- FACE API -->
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
 <style>
 /* --- STYLING (improved, merged, cleaned) --- */
 :root{
@@ -42,6 +46,7 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
 .play-btn{margin-top:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:8px 10px;border:none;border-radius:10px;color:#012;font-weight:700;}
 </style>
 </head>
+
 <body>
 <div class="app">
 
@@ -51,12 +56,14 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
       <div class="logo">DJ</div>
       <div>
         <h2 style="margin:0;font-size:20px;">AI Mood DJ</h2>
-        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชันปรับปรุงรวม Presets</p>
+        <p style="margin:0;color:var(--muted);font-size:13px;">เวอร์ชันปรับปรุงรวม Presets + Emotion AI</p>
       </div>
       <button id="openSettings" class="btn" style="margin-left:auto;">⚙️ ตั้งค่า</button>
     </div>
 
-    <div class="howto" style="margin-top:10px;color:var(--muted);font-size:13px;">1) เลือก Preset 2) ตั้งเพลงเสริม 3) ถ่ายภาพหรืออัปโหลด 4) ระบบแนะนำเพลงอัตโนมัติ</div>
+    <div class="howto" style="margin-top:10px;color:var(--muted);font-size:13px;">
+      1) เลือก Preset → 2) ใส่เพลง → 3) ถ่าย/อัปโหลดรูป → 4) ระบบวิเคราะห์อารมณ์แบบ AI
+    </div>
 
     <video id="video" autoplay muted playsinline></video>
 
@@ -67,7 +74,7 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
       <button id="demoFace" class="btn">👁️ ตัวอย่าง</button>
     </div>
 
-    <div id="statusArea" style="margin-top:10px;color:var(--muted)">พร้อมใช้งาน</div>
+    <div id="statusArea" style="margin-top:10px;color:var(--muted)">กำลังโหลดโมเดล...</div>
   </section>
 
   <!-- RIGHT PANEL → MOOD RESULT -->
@@ -87,14 +94,14 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
   </section>
 </div>
 
-<!-- SETTINGS DRAWER WITH PRESET PACKS -->
-<aside id="drawer" class="settings-drawer" style="position:fixed;right:20px;top:20px;width:360px;max-width:90vw;background:#ffffff08;padding:16px;border-radius:16px;transform:translateX(420px);transition:.35s;">
+<!-- SETTINGS DRAWER -->
+<aside id="drawer" style="position:fixed;right:20px;top:20px;width:360px;max-width:90vw;background:#ffffff08;padding:16px;border-radius:16px;transform:translateX(420px);transition:.35s;">
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <h3>ตั้งค่าเพลง + Preset</h3>
     <button id="closeDrawer" class="btn ghost">✖️</button>
   </div>
 
-  <label class="small">เลือก Preset Pack:</label>
+  <label class="small">Preset Pack:</label>
   <select id="presetSelect" class="btn" style="width:100%;margin-top:4px;">
     <option value="none">-- ไม่ใช้ preset --</option>
     <option value="basic">🎧 Basic Pack</option>
@@ -103,7 +110,7 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
     <option value="gamer">🕹️ Gamer Pack</option>
   </select>
 
-  <button id="applyPreset" class="btn prim" style="width:100%;margin-top:10px;">✅ โหลด Preset</button>
+  <button id="applyPreset" class="btn prim" style="width:100%;margin-top:10px;">โหลด Preset</button>
 
   <label class="small" style="margin-top:10px;">Happiness</label>
   <textarea id="happinessLinks"></textarea>
@@ -121,47 +128,153 @@ textarea{width:100%;background:#0004;border:1px solid #fff1;padding:10px;border-
 </aside>
 
 <script>
-/* Camera */
-navigator.mediaDevices.getUserMedia({ video:true }).then(stream=> video.srcObject = stream);
+/* ---------------------------------------
+      LOAD FACE API MODELS
+--------------------------------------- */
+async function loadModels() {
+  const MODEL_URL = "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/models";
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+  document.getElementById("statusArea").textContent = "✔ โหลดโมเดลสำเร็จ พร้อมใช้งาน";
+}
+loadModels();
 
-/* DOM */
-const ids=["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
-const presetData={
-  basic:{happiness:["https://youtube.com/playlist?list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp&si=jIcL5It-l4SGd0MQ"],sadness:["https://youtu.be/POETazMpykQ?si=1pEZMgYmzs05dg5U"],anger:["https://youtu.be/t9mCFx_zF8U?si=B-qXzMrLcdiREeE_"],neutral:["https://youtu.be/n61ULEU7CO0?si=IHaT_bvKNA4V25ct"]},
-  chill:{happiness:["https://youtu.be/xNSx7NYZ4fM?si=6Fgq8tByg9YY8d3q"],sadness:["https://youtu.be/_c7xxwWbljk?si=hg0-blrg7sPiwxM2"],anger:["https://youtu.be/6m2Ma8uX74s?si=b40pBFqKjBboM2mA"],neutral:["https://youtu.be/EkVbIfRPQAg?si=qj3dDIVys123ynW1"]},
-  thaipop:{happiness:["https://youtu.be/nJFJvO83o_s?si=J13zH2kdiFRAuZ93"],sadness:["https://youtu.be/eY7iqYmQNhE?si=ZPqLZwFYqE5fNu0c"],anger:["https://youtube.com/playlist?list=PLZSdxWoL6_WD8dpQE9iluLw3yYVQJphYp&si=vWlUR_9Vi6vrwWF1"],neutral:["https://youtu.be/aHoyTRlHCr4?si=nrWD5uHqZwzq8vWd"]},
-  gamer:{happiness:["https://youtu.be/ih2xubMaZWI?si=4unlGPLe5qX6soL0"],sadness:["https://youtu.be/M1YriKcNIco?si=n6FMLeQSmBlA5Wmd"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN&si=vzwFD4AGIiWIcP9D"],neutral:["https://youtu.be/3fxq7kqyWO8?si=mKVP1LGF1UPOcL-1"]}
+/* CAMERA */
+navigator.mediaDevices.getUserMedia({ video:true }).then(stream => video.srcObject = stream);
+
+/* PRESET DATA */
+const ids = ["happinessLinks","sadnessLinks","angerLinks","neutralLinks"];
+const presetData = {
+  basic:{happiness:["https://youtube.com/playlist?list=PLgzTt0k8mXzF2fleyxQ17JxeccHFC8Gxp"],sadness:["https://youtu.be/POETazMpykQ"],anger:["https://youtu.be/t9mCFx_zF8U"],neutral:["https://youtu.be/n61ULEU7CO0"]},
+  chill:{happiness:["https://youtu.be/xNSx7NYZ4fM"],sadness:["https://youtu.be/_c7xxwWbljk"],anger:["https://youtu.be/6m2Ma8uX74s"],neutral:["https://youtu.be/EkVbIfRPQAg"]},
+  thaipop:{happiness:["https://youtu.be/nJFJvO83o_s"],sadness:["https://youtu.be/eY7iqYmQNhE"],anger:["https://youtube.com/playlist?list=PLZSdxWoL6_WD8dpQE9iluLw3yYVQJphYp"],neutral:["https://youtu.be/aHoyTRlHCr4"]},
+  gamer:{happiness:["https://youtu.be/ih2xubMaZWI"],sadness:["https://youtu.be/M1YriKcNIco"],anger:["https://youtube.com/playlist?list=PL6Y6az3uyYAZJailKdu-zkc9JnvCyvgoN"],neutral:["https://youtu.be/3fxq7kqyWO8"]}
 };
 
-function loadSaved(){ids.forEach(id=>document.getElementById(id).value=localStorage.getItem(id)||"");}
+/* LOAD SAVED */
+function loadSaved() {
+  ids.forEach(id => document.getElementById(id).value = localStorage.getItem(id) || "");
+}
 loadSaved();
 
-function applyPreset(key){const p=presetData[key];if(!p)return;document.getElementById("happinessLinks").value=p.happiness.join("\n");document.getElementById("sadnessLinks").value=p.sadness.join("\n");document.getElementById("angerLinks").value=p.anger.join("\n");document.getElementById("neutralLinks").value=p.neutral.join("\n");}
-
-document.getElementById("applyPreset").onclick=()=>{const v=document.getElementById("presetSelect").value;if(v!="none") applyPreset(v);};
-document.getElementById("saveSettings").onclick=()=>{ids.forEach(id=>localStorage.setItem(id,document.getElementById(id).value));drawer.style.transform="translateX(420px)";};
-
-document.getElementById("openSettings").onclick=()=> drawer.style.transform="translateX(0)";
-document.getElementById("closeDrawer").onclick=()=> drawer.style.transform="translateX(420px)";
-
-/* Helper */
-function getRandom(id){const list=(document.getElementById(id).value||"").split("\n").filter(Boolean);return list[Math.floor(Math.random()*list.length)]}
-
-/* Mood UI */
-function updateMood(mood,conf){document.getElementById("moodTitle").textContent=mood;document.getElementById("detectedConfidence").textContent="ความมั่นใจ: "+conf+"%";
-  const emo={happiness:"😄",sadness:"😢",anger:"😡",neutral:"😐"};document.getElementById("moodEmoji").textContent=emo[mood]||"🙂";
-  let field={happiness:"happinessLinks",sadness:"sadnessLinks",anger:"angerLinks",neutral:"neutralLinks"}[mood];
-  let link=getRandom(field);
-  const grid=document.getElementById("tracksGrid");grid.innerHTML="";
-  if(link){grid.innerHTML=`<div class='track'><div>${link}</div><button class='play-btn' onclick="window.open('${link}')">▶️ เล่น</button></div>`}
+/* APPLY PRESET */
+function applyPreset(key){
+  const p = presetData[key];
+  if(!p) return;
+  document.getElementById("happinessLinks").value = p.happiness.join("\n");
+  document.getElementById("sadnessLinks").value = p.sadness.join("\n");
+  document.getElementById("angerLinks").value = p.anger.join("\n");
+  document.getElementById("neutralLinks").value = p.neutral.join("\n");
 }
 
-/* Image analysis (mock, since API keys removed for safety) */
-function fakeAnalyze(){const moods=["happiness","sadness","anger","neutral"];const m=moods[Math.floor(Math.random()*4)];updateMood(m,80);}
+document.getElementById("applyPreset").onclick = () => {
+  const v = document.getElementById("presetSelect").value;
+  if(v !== "none") applyPreset(v);
+};
 
-document.getElementById("snap").onclick=fakeAnalyze;
-document.getElementById("uploadFile").onchange=fakeAnalyze;
-document.getElementById("demoFace").onclick=fakeAnalyze;
+document.getElementById("saveSettings").onclick = () => {
+  ids.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+  drawer.style.transform = "translateX(420px)";
+};
+
+document.getElementById("openSettings").onclick = ()=> drawer.style.transform="translateX(0)";
+document.getElementById("closeDrawer").onclick = ()=> drawer.style.transform="translateX(420px)";
+
+/* UTIL */
+function getRandom(id){
+  const list = (document.getElementById(id).value || "")
+    .split("\n").filter(Boolean);
+  return list[Math.floor(Math.random()*list.length)];
+}
+
+function updateMood(mood,conf){
+  document.getElementById("moodTitle").textContent = mood;
+  document.getElementById("detectedConfidence").textContent = "ความมั่นใจ: "+conf+"%";
+  const emo = { happiness:"😄", sadness:"😢", anger:"😡", neutral:"😐" };
+  document.getElementById("moodEmoji").textContent = emo[mood]||"🙂";
+
+  let field = {
+    happiness:"happinessLinks",
+    sadness:"sadnessLinks",
+    anger:"angerLinks",
+    neutral:"neutralLinks"
+  }[mood];
+
+  const link = getRandom(field);
+  const grid = document.getElementById("tracksGrid");
+  grid.innerHTML = "";
+
+  if(link){
+    grid.innerHTML = `
+      <div class="track">
+        <div>${link}</div>
+        <button class="play-btn" onclick="window.open('${link}')">▶️ เล่น</button>
+      </div>`;
+  }
+}
+
+/* ---------------------------------------
+      EMOTION ANALYSIS
+--------------------------------------- */
+async function analyzeImage(input){
+  const detection = await faceapi
+    .detectSingleFace(input, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks()
+    .withFaceExpressions();
+
+  if(!detection){
+    updateMood("neutral",0);
+    document.getElementById("statusArea").textContent="ไม่พบหน้า";
+    return;
+  }
+
+  const exp = detection.expressions;
+  const sorted = Object.entries(exp).sort((a,b)=>b[1]-a[1]);
+  const [topMood, confidence] = sorted[0];
+
+  const map = {
+    happy:"happiness",
+    sad:"sadness",
+    angry:"anger",
+    neutral:"neutral",
+    surprised:"happiness",
+    disgusted:"anger",
+    fearful:"sadness"
+  };
+
+  const mood = map[topMood] || "neutral";
+  updateMood(mood,Math.round(confidence*100));
+  document.getElementById("statusArea").textContent="วิเคราะห์สำเร็จ ✓";
+}
+
+/* SNAP CAMERA */
+document.getElementById("snap").onclick = async ()=>{
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video,0,0);
+  analyzeImage(canvas);
+};
+
+/* UPLOAD */
+document.getElementById("uploadFile").onchange = async ev=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+
+  const img = new Image();
+  img.onload = ()=> analyzeImage(img);
+  img.src = URL.createObjectURL(file);
+};
+
+/* DEMO */
+document.getElementById("demoFace").onclick = ()=>{
+  const demo = new Image();
+  demo.crossOrigin="anonymous";
+  demo.src="https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/examples/images/bbt1.jpg";
+  demo.onload = ()=> analyzeImage(demo);
+};
 </script>
+
 </body>
 </html>
